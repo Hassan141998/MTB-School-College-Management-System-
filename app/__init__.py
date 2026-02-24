@@ -17,6 +17,18 @@ def create_app(config_name='default'):
     
     app = Flask(__name__, instance_path=instance_path)
     app.config.from_object(config[config_name])
+    
+    # Force evaluation of DATABASE_URL directly inside the app factory
+    # to guarantee Vercel reads the environment variable at runtime
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url:
+        db_url = db_url.strip('"').strip("'")
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        if '?' in db_url:
+            db_url = db_url.split('?')[0]
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+
     config[config_name].init_app(app)
 
     db.init_app(app)
