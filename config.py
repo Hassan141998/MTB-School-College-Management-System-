@@ -27,26 +27,27 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
+    
     _db_url = os.environ.get('DATABASE_URL')
-    
-    # Force failure with a clear message if no database URL is provided in Vercel
     if not _db_url:
-        raise ValueError("CRITICAL: 'DATABASE_URL' is missing! You must add the Neon PostgreSQL URL to Vercel Settings -> Environment Variables and Redeploy.")
-        
-    _db_url = _db_url.strip('"').strip("'")
-    if _db_url.startswith('postgres://'):
-        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
-        
-    # Remove query parameters like ?sslmode=require which confuse SQLAlchemy 
-    # in some Serverless PostgreSQL dialect combinations
-    if '?' in _db_url:
-        _db_url = _db_url.split('?')[0]
-    
+        # Fallback to sqlite so the app doesn't crash on import, 
+        # though it will fail during DB queries if Neon is not linked.
+        _db_url = 'sqlite:////tmp/mtb_school.db'
+    else:
+        _db_url = _db_url.strip('"').strip("'")
+        if _db_url.startswith('postgres://'):
+            _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+        if '?' in _db_url:
+            _db_url = _db_url.split('?')[0]
+            
     SQLALCHEMY_DATABASE_URI = _db_url
 
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
+        # Check if DB URL is missing and log it
+        if not os.environ.get('DATABASE_URL'):
+            print("WARNING: DATABASE_URL environment variable is missing in Vercel!")
 
 
 class TestingConfig(Config):
