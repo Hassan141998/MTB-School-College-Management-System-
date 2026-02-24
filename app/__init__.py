@@ -59,6 +59,7 @@ def create_app(config_name='default'):
     def inject_globals():
         from flask_login import current_user
         from app.models import Announcement
+        announcements = []
         try:
             announcements = Announcement.query.filter_by(is_active=True).order_by(
                 Announcement.created_at.desc()).limit(3).all()
