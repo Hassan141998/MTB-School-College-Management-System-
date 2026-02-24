@@ -51,10 +51,13 @@ def create_app(config_name=None):
     app.register_blueprint(reports_bp, url_prefix='/reports')
     app.register_blueprint(settings_bp, url_prefix='/settings')
 
-    # Create upload directories
-    os.makedirs(os.path.join(app.static_folder, 'uploads', 'students'), exist_ok=True)
-    os.makedirs(os.path.join(app.static_folder, 'uploads', 'teachers'), exist_ok=True)
-    os.makedirs(os.path.join(app.static_folder, 'face_encodings'), exist_ok=True)
+    # Create upload directories (Will fail gracefully on Vercel's read-only FS)
+    try:
+        os.makedirs(os.path.join(app.static_folder, 'uploads', 'students'), exist_ok=True)
+        os.makedirs(os.path.join(app.static_folder, 'uploads', 'teachers'), exist_ok=True)
+        os.makedirs(os.path.join(app.static_folder, 'face_encodings'), exist_ok=True)
+    except OSError:
+        pass
 
     @app.context_processor
     def inject_globals():

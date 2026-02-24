@@ -9,8 +9,11 @@ class Config:
 
     @staticmethod
     def init_app(app):
-        os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
-        os.makedirs(Config.FACE_ENCODINGS_FOLDER, exist_ok=True)
+        try:
+            os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
+            os.makedirs(Config.FACE_ENCODINGS_FOLDER, exist_ok=True)
+        except OSError:
+            pass  # Vercel serverless has a read-only filesystem
 
 
 class DevelopmentConfig(Config):
