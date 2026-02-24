@@ -1,6 +1,11 @@
 import os
 import click
 from datetime import date, timedelta
+from dotenv import load_dotenv
+
+# Load environment variables from .env file for local development
+load_dotenv()
+
 from app import create_app, db
 from app.models import (
     User, Department, Subject, ClassSection, Student, Teacher,
