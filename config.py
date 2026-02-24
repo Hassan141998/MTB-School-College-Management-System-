@@ -36,6 +36,11 @@ class ProductionConfig(Config):
     _db_url = _db_url.strip('"').strip("'")
     if _db_url.startswith('postgres://'):
         _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+        
+    # Remove query parameters like ?sslmode=require which confuse SQLAlchemy 
+    # in some Serverless PostgreSQL dialect combinations
+    if '?' in _db_url:
+        _db_url = _db_url.split('?')[0]
     
     SQLALCHEMY_DATABASE_URI = _db_url
 
