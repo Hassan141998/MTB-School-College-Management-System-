@@ -11,15 +11,11 @@ login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'warning'
 
 
-def create_app(config_name=None):
-    if config_name is None:
-        config_name = os.environ.get('FLASK_ENV', 'development')
-        if config_name == 'development':
-            config_name = 'development'
-        else:
-            config_name = 'production'
-
-    app = Flask(__name__)
+def create_app(config_name='default'):
+    # Force instance_path to /tmp on Vercel to bypass read-only filesystem
+    instance_path = '/tmp/instance' if os.environ.get('VERCEL') == '1' else None
+    
+    app = Flask(__name__, instance_path=instance_path)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
