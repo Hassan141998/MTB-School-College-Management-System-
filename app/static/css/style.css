@@ -203,7 +203,7 @@ body {
     transition: var(--transition);
 }
 
-.sidebar.collapsed .nav-link span {
+.sidebar.collapsed .nav-link span:not(.nav-icon) {
     opacity: 0;
     width: 0;
 }

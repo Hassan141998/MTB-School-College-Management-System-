@@ -177,7 +177,17 @@
             </div>
 
             <!-- Page Content -->
-            {% block content %}{% endblock %}
+            <div style="flex: 1;">
+                {% block content %}{% endblock %}
+            </div>
+
+            <!-- Footer -->
+            <footer
+                style="text-align: center; padding: 24px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: auto;">
+                Built by <a href="https://github.com/Hassan141998" target="_blank"
+                    style="color: var(--primary); font-weight: 600; text-decoration: none;">Hassan Ahmed</a> <br>
+                Powered by Flask · Pure Python · Neon DB
+            </footer>
         </div>
     </div>
 
