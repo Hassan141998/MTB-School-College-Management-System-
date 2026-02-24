@@ -2,12 +2,8 @@
     "version": 2,
     "builds": [
         {
-            "src": "run.py",
-            "use": "@vercel/python",
-            "config": {
-                "maxLambdaSize": "50mb",
-                "runtime": "python3.11"
-            }
+            "src": "api/index.py",
+            "use": "@vercel/python"
         }
     ],
     "routes": [
@@ -17,7 +13,7 @@
         },
         {
             "src": "/(.*)",
-            "dest": "run.py"
+            "dest": "api/index.py"
         }
     ],
     "env": {
