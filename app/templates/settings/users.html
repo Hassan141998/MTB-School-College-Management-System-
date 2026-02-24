@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}System Users — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">User Management</h1>
+            <p class="page-subtitle">Manage system administrators, staff, and teachers</p>
+        </div>
+        <a href="{{ url_for('settings.departments') }}" class="btn btn-outline">← Back to Settings</a>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">➕ Add New User</div>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('settings.users') }}" autocomplete="off">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Full Name <span class="req">*</span></label>
+                            <input type="text" name="full_name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Username <span class="req">*</span></label>
+                            <input type="text" name="username" class="form-control" required
+                                autocomplete="new-password">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password <span class="req">*</span></label>
+                            <input type="password" name="password" class="form-control" required minlength="6"
+                                autocomplete="new-password">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-control">
+                            <option value="admin">Admin</option>
+                            <option value="staff">Staff/Accountant</option>
+                            <option value="teacher">Teacher</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" style="justify-content:center">Create
+                        User</button>
+                </form>
+            </div>
+        </div>
+
+        <div>
+            <div class="card" style="height:100%">
+                <div class="card-header">
+                    <div class="card-title">👥 Existing Users</div>
+                </div>
+                <div class="card-body" style="padding:0;overflow-y:auto;max-height:450px">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>
+                                    <div class="cell-name">{{ u.full_name }}</div>
+                                    <div class="cell-sub">{{ u.username }}</div>
+                                </td>
+                                <td><span class="badge badge-secondary">{{ u.role|capitalize }}</span></td>
+                                <td>
+                                    <span
+                                        class="badge {% if u.is_active %}badge-success{% else %}badge-danger{% endif %}">
+                                        {{ 'Active' if u.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('settings.toggle_user_status', id=u.id) }}"
+                                        style="display:inline">
+                                        <button type="submit"
+                                            class="action-btn {% if u.is_active %}reject{% else %}approve{% endif %}"
+                                            data-tooltip="{{ 'Deactivate' if u.is_active else 'Activate' }}" {% if
+                                            u.id==current_user.id %}disabled{% endif %}>
+                                            {{ '🚫' if u.is_active else '✓' }}
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

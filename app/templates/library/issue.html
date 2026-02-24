@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Issue Book — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Issue Book</h1>
+        </div>
+        <a href="{{ url_for('library.books') }}" class="btn btn-outline">← Back to Library</a>
+    </div>
+    <div class="grid-2">
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📤 Issue Details</div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('library.issue_book') }}">
+                        <div class="form-group">
+                            <label class="form-label">Book <span class="req">*</span></label>
+                            <select name="book_id" class="form-control" required>
+                                <option value="">Select Book</option>
+                                {% for b in books %}
+                                <option value="{{ b.id }}" {% if preselected_book==b.id|string %}selected{% endif %}>
+                                    {{ b.title }} (Available: {{ b.available_copies }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Student <span class="req">*</span></label>
+                            <select name="student_id" class="form-control" required>
+                                <option value="">Select Student</option>
+                                {% for s in students %}
+                                <option value="{{ s.id }}">{{ s.full_name }} — {{ s.reg_no }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Issue Date</label>
+                                <input type="date" name="issue_date" class="form-control"
+                                    value="{{ today.isoformat() }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Due Date <span class="req">*</span></label>
+                                <input type="date" name="due_date" class="form-control"
+                                    value="{{ default_due.isoformat() }}" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notes (Optional)</label>
+                            <textarea name="notes" class="form-control" rows="2"
+                                placeholder="Condition of book, etc."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" style="justify-content:center">📤 Issue
+                            Book</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">ℹ️ Library Rules</div>
+                </div>
+                <div class="card-body">
+                    <ul
+                        style="list-style-position:inside;color:var(--text-color);display:flex;flex-direction:column;gap:12px;font-size:14px">
+                        <li>Ensure the student's ID is verified before issuing any material.</li>
+                        <li>Default borrowing period is <strong>14 days</strong>.</li>
+                        <li>Students with overdue books should not be issued new ones until past dues are cleared.</li>
+                        <li>Any damage to the book should be noted in the 'Notes' field before issuing.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

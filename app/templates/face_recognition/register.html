@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Face Registration — MTB School{% endblock %}
+{% block body_attr %}data-face-mode="register"{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/face_recognition.css') }}">{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/face-recognition.js') }}"></script>{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">🤖 Face Registration</h1>
+            <p class="page-subtitle">Capture 5 face samples to register a student</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('face.mark') }}" class="btn btn-secondary">📸 Mark Attendance</a>
+            <a href="{{ url_for('face.live') }}" class="btn btn-primary">📡 Live Mode</a>
+        </div>
+    </div>
+
+    {% if not available %}
+    <div class="face-unavailable">
+        <div class="icon">🛠️</div>
+        <h3>Face Recognition Not Available</h3>
+        <p>The <code>face-recognition</code> and <code>opencv-python-headless</code> libraries are not installed.
+            Install them to enable this feature:</p>
+        <code>pip install face-recognition opencv-python-headless</code>
+        <p style="margin-top:16px;font-size:12px;color:var(--text-muted)">Note: Requires cmake and dlib. On Windows,
+            install Visual C++ Build Tools first.</p>
+    </div>
+    {% else %}
+    <div class="camera-section">
+        <!-- Camera Card -->
+        <div class="camera-card">
+            <div class="camera-header">
+                <span class="camera-title">📷 Webcam Feed</span>
+                <div class="camera-status">
+                    <div class="status-dot"></div><span>Camera Off</span>
+                </div>
+            </div>
+            <div class="camera-feed-wrapper">
+                <video id="camera-video" autoplay muted playsinline style="display:none"></video>
+                <canvas id="camera-canvas" style="display:none"></canvas>
+                <div class="face-guide" id="face-guide" style="display:none">
+                    <div class="face-guide-oval">
+                        <div class="face-guide-corner tl"></div>
+                        <div class="face-guide-corner tr"></div>
+                        <div class="face-guide-corner bl"></div>
+                        <div class="face-guide-corner br"></div>
+                    </div>
+                </div>
+                <div class="scan-line" id="scan-line" style="display:none"></div>
+                <div class="camera-placeholder" id="camera-placeholder">
+                    <div class="camera-placeholder-icon">📷</div>
+                    <div class="camera-placeholder-text">Click "Start Camera" to begin</div>
+                </div>
+            </div>
+            <div class="camera-footer">
+                <button class="btn btn-primary" id="start-camera-btn"
+                    onclick="this.parentElement.querySelector('#camera-video').style.display='block';document.getElementById('face-guide').style.display='block';document.getElementById('scan-line').style.display='block'">▶
+                    Start Camera</button>
+                <button class="btn btn-outline" id="stop-camera-btn" style="display:none">⏹ Stop</button>
+                <button class="btn btn-accent" id="capture-btn" disabled>📸 Capture (<span
+                        id="sample-count">0</span>/5)</button>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="face-panel">
+            <div class="face-panel-header">Register Student Face</div>
+            <div class="face-panel-body">
+                <div class="form-group">
+                    <label class="form-label">Select Student <span class="req">*</span></label>
+                    <select id="student-id-input" class="form-control">
+                        <option value="">Choose a student...</option>
+                        {% for s in students %}
+                        <option value="{{ s.id }}" {% if s.has_face_registered %}data-registered="true" {% endif %}>
+                            {{ s.full_name }} — {{ s.reg_no }}{% if s.has_face_registered %} ✓{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="margin-bottom:16px">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600">CAPTURE
+                        PROGRESS</div>
+                    <div class="progress-steps">
+                        {% for i in range(5) %}<div class="step-pill" id="step-{{ i }}"></div>{% endfor %}
+                    </div>
+                </div>
+                <div style="margin-bottom:16px">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600">SAMPLES ({{
+                        5|int - 0 }} needed)</div>
+                    <div class="samples-grid">
+                        {% for i in range(5) %}<div class="sample-thumb" id="sample-{{ i }}">{{ i+1 }}</div>{% endfor %}
+                    </div>
+                </div>
+                <button class="btn btn-success w-100" id="register-btn" disabled style="justify-content:center">🔒
+                    Register Face</button>
+                <div style="margin-top:14px;font-size:12px;color:var(--text-muted)">
+                    <strong>Tips:</strong> Good lighting, face centered in oval, no glasses if possible, 5 different
+                    angles.
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

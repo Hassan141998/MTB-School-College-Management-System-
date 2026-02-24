@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MTB School & College{% endblock %}</title>
+    <meta name="description" content="MTB School & College Management System — Providing Quality Education Since 2005">
+    <link rel="icon" type="image/x-icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏫</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms_tables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/face_recognition.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body {% block body_attr %}{% endblock %}>
+
+    <div id="app-wrapper">
+        {% if current_user.is_authenticated %}
+        <!-- Sidebar Overlay (mobile) -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <a href="{{ url_for('dashboard.index') }}" class="sidebar-brand">
+                <div class="sidebar-brand-icon">🏫</div>
+                <div class="sidebar-brand-text">
+                    <div class="brand-name">MTB School</div>
+                    <div class="brand-sub">& College</div>
+                </div>
+            </a>
+
+            <nav class="sidebar-nav">
+                <ul style="list-style:none;padding:0;margin:0">
+                    <li class="nav-section">Main</li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('dashboard.index') }}" class="nav-link">
+                            <span class="nav-icon">📊</span><span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    {% if current_user.role in ['admin','principal','hod','teacher','accountant','receptionist'] %}
+                    <li class="nav-section">Academic</li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('students.list_students') }}" class="nav-link">
+                            <span class="nav-icon">🎓</span><span>Students</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('teachers.list_teachers') }}" class="nav-link">
+                            <span class="nav-icon">👨‍🏫</span><span>Teachers</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('attendance.mark') }}" class="nav-link">
+                            <span class="nav-icon">✅</span><span>Attendance</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('exams.list_exams') }}" class="nav-link">
+                            <span class="nav-icon">📝</span><span>Exams</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-section">Finance & Library</li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('fees.payments') }}" class="nav-link">
+                            <span class="nav-icon">💰</span><span>Fees</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('library.books') }}" class="nav-link">
+                            <span class="nav-icon">📚</span><span>Library</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-section">Technology</li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('face.register') }}" class="nav-link">
+                            <span class="nav-icon">🤖</span><span>Face Recognition</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-section">Reports</li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('reports.index') }}" class="nav-link">
+                            <span class="nav-icon">📈</span><span>Reports</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if current_user.role in ['admin','principal'] %}
+                    <li class="nav-section">Administration</li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('settings.departments') }}" class="nav-link">
+                            <span class="nav-icon">⚙️</span><span>Settings</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-user-avatar">{{ current_user.full_name[0]|upper }}</div>
+                    <div class="sidebar-user-info">
+                        <div class="user-name">{{ current_user.full_name|truncate(18, True, '') }}</div>
+                        <div class="user-role">{{ current_user.role|capitalize }}</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content -->
+        <div id="main-content">
+            {% if current_user.is_authenticated %}
+            <!-- Navbar -->
+            <nav class="navbar">
+                <button class="navbar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+                <span class="navbar-brand-mobile">MTB School</span>
+
+                <div class="navbar-search">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search students, teachers...">
+                </div>
+
+                <div class="navbar-right">
+                    <a href="{{ url_for('settings.announcements') }}" class="navbar-btn" data-tooltip="Announcements">
+                        <span>🔔</span>
+                        {% if announcements %}<span class="dot"></span>{% endif %}
+                    </a>
+                    <a href="{{ url_for('settings.calendar') }}" class="navbar-btn" data-tooltip="Calendar">📅</a>
+
+                    <div class="user-dropdown">
+                        <button class="user-dropdown-toggle" data-dropdown="user-menu">
+                            <div class="user-avatar">{{ current_user.full_name[0]|upper }}</div>
+                            <div>
+                                <div class="user-name">{{ current_user.full_name|truncate(16, True, '') }}</div>
+                                <div class="user-role">{{ current_user.role|capitalize }}</div>
+                            </div>
+                            <span>▾</span>
+                        </button>
+                        <div class="dropdown-menu" id="user-menu">
+                            <a href="{{ url_for('auth.profile') }}" class="dropdown-item">👤 My Profile</a>
+                            <a href="{{ url_for('dashboard.index') }}" class="dropdown-item">📊 Dashboard</a>
+                            {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('settings.users') }}" class="dropdown-item">👥 Manage Users</a>
+                            {% endif %}
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('auth.logout') }}" class="dropdown-item danger">🚪 Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            {% endif %}
+
+            <!-- Flash messages -->
+            <div class="flash-container" id="flash-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="flash-alert {{ category }}">
+                    <span class="flash-icon">{% if category == 'success' %}✓{% elif category == 'danger' %}✕{% elif
+                        category == 'warning' %}⚠{% else %}ℹ{% endif %}</span>
+                    <span class="flash-msg">{{ message }}</span>
+                    <button class="flash-close">×</button>
+                </div>
+                {% endfor %}
+                {% endwith %}
+            </div>
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

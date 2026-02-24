@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Academic Calendar — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Academic Calendar</h1>
+            <p class="page-subtitle">Manage events, holidays, and terms</p>
+        </div>
+        <a href="{{ url_for('settings.departments') }}" class="btn btn-outline">← Back to Settings</a>
+    </div>
+
+    <div class="grid-2">
+        <!-- Add Event Form -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">➕ Add Event</div>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('settings.calendar') }}">
+                    <div class="form-group">
+                        <label class="form-label">Event Title <span class="req">*</span></label>
+                        <input type="text" name="title" class="form-control" required placeholder="e.g. Summer Break">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Details..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Start Date <span class="req">*</span></label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">End Date (optional)</label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Event Type</label>
+                            <select name="event_type" class="form-control">
+                                <option value="term">Academic Term</option>
+                                <option value="exam">Examination</option>
+                                <option value="activity">Extracurricular Activity</option>
+                                <option value="ptm">Parent-Teacher Meeting</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="display:block">Holiday?</label>
+                            <label style="display:flex;align-items:center;gap:8px;padding-top:8px">
+                                <input type="checkbox" name="is_holiday" value="1" style="width:18px;height:18px">
+                                <span>Mark as a holiday (School closed)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" style="justify-content:center">Add
+                        Event</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Event List -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📅 Upcoming Events</div>
+            </div>
+            <div class="card-body" style="padding:0">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Dates</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ev in events %}
+                        <tr>
+                            <td>
+                                <div class="cell-name">{{ ev.title }}</div>
+                                <div class="cell-sub" style="font-size:11px">{{ ev.description|truncate(40) if
+                                    ev.description else '' }}</div>
+                            </td>
+                            <td>
+                                <div style="font-size:13px">{{ ev.start_date.strftime('%d %b %Y') }}</div>
+                                {% if ev.end_date and ev.end_date != ev.start_date %}
+                                <div class="text-muted" style="font-size:11px">to {{ ev.end_date.strftime('%d %b %Y') }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ev.is_holiday %}
+                                <span class="badge badge-warning">Holiday</span>
+                                {% else %}
+                                <span class="badge badge-info">{{ ev.event_type|capitalize }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('settings.delete_calendar_event', id=ev.id) }}"
+                                    data-confirm="Remove this event?">
+                                    <button type="submit" class="action-btn delete">🗑</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">No upcoming
+                                events scheduled</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

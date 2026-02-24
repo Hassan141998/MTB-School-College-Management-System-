@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — MTB School & College{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <!-- Page header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Welcome back, <strong>{{ current_user.full_name }}</strong>! Today is {{
+                today.strftime('%A, %d %B %Y') }}.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('students.add_student') }}" class="btn btn-primary">+ Add Student</a>
+            <a href="{{ url_for('fees.record_payment') }}" class="btn btn-secondary">💰 Record Fee</a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card orange">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.total_students }}</div>
+                <div class="stat-label">Total Students</div>
+                <div class="stat-change up">↑ Active Enrollment</div>
+            </div>
+        </div>
+        <div class="stat-card blue">
+            <div class="stat-icon">👨‍🏫</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.total_teachers }}</div>
+                <div class="stat-label">Total Teachers</div>
+                <div class="stat-change up">↑ Active Staff</div>
+            </div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.today_attendance_pct }}%</div>
+                <div class="stat-label">Today's Attendance</div>
+                <div class="stat-change {% if stats.today_attendance_pct >= 75 %}up{% else %}down{% endif %}">
+                    {{ '↑ Good' if stats.today_attendance_pct >= 75 else '↓ Below Target' }}
+                </div>
+            </div>
+        </div>
+        <div class="stat-card gold">
+            <div class="stat-icon">💰</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ "{:,.0f}".format(stats.month_fees) }}</div>
+                <div class="stat-label">Monthly Collections (PKR)</div>
+                <div class="stat-change up">↑ This Month</div>
+            </div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-icon">📚</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.books_issued }}</div>
+                <div class="stat-label">Books Issued</div>
+                <div class="stat-change">of {{ stats.total_books }} total books</div>
+            </div>
+        </div>
+        <div class="stat-card teal">
+            <div class="stat-icon">📝</div>
+            <div class="stat-info">
+                <div class="stat-value">{{ stats.active_exams }}</div>
+                <div class="stat-label">Active Exams</div>
+                <div class="stat-change">Current academic year</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts + Events Row -->
+    <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><span class="title-icon">📈</span> Enrollment Trend</div>
+                <span class="badge badge-primary">Last 6 Months</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container"><canvas id="enrollmentChart"></canvas></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><span class="title-icon">✅</span> Attendance (7 Days)</div>
+                <span class="badge badge-success">Present vs Absent</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container"><canvas id="attendanceChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><span class="title-icon">💰</span> Fee Collection</div>
+                <span class="badge badge-info">Last 6 Months</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container"><canvas id="feesChart"></canvas></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><span class="title-icon">🏫</span> Students by Class</div>
+                <span class="badge badge-secondary">Distribution</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container"><canvas id="classChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Announcements + Events -->
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><span class="title-icon">📢</span> Announcements</div>
+                <a href="{{ url_for('settings.announcements') }}" class="btn btn-ghost btn-sm">View All</a>
+            </div>
+            <div class="card-body" style="padding-top:8px;padding-bottom:8px">
+                {% if announcements %}
+                {% for ann in announcements %}
+                <div class="announcement-item {{ ann.priority }}">
+                    <div class="announcement-icon">
+                        {{ '🚨' if ann.priority == 'urgent' else '⚠️' if ann.priority == 'high' else '📢' }}
+                    </div>
+                    <div>
+                        <div class="announcement-title">{{ ann.title }}</div>
+                        <div class="announcement-meta">{{ ann.created_at.strftime('%d %b %Y') }} · {{
+                            ann.target_audience|capitalize }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state" style="padding:32px">
+                    <div class="empty-state-icon">📢</div>
+                    <div class="empty-state-subtitle">No announcements yet</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title"><span class="title-icon">📅</span> Upcoming Events</div>
+                <a href="{{ url_for('settings.calendar') }}" class="btn btn-ghost btn-sm">View Calendar</a>
+            </div>
+            <div class="card-body" style="padding-top:8px;padding-bottom:8px">
+                {% if upcoming_events %}
+                {% for event in upcoming_events %}
+                <div class="announcement-item normal">
+                    <div class="announcement-icon">
+                        {{ '🏖️' if event.is_holiday else '📝' if event.event_type == 'exam' else '📅' }}
+                    </div>
+                    <div>
+                        <div class="announcement-title">{{ event.title }}</div>
+                        <div class="announcement-meta">{{ event.start_date.strftime('%d %b %Y') }}
+                            {% if event.is_holiday %}<span class="badge badge-warning"
+                                style="margin-left:6px">Holiday</span>{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state" style="padding:32px">
+                    <div class="empty-state-icon">📅</div>
+                    <div class="empty-state-subtitle">No upcoming events</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Create Exam — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Create New Exam</h1>
+        </div><a href="{{ url_for('exams.list_exams') }}" class="btn btn-outline">← Back</a>
+    </div>
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📝 Exam Details</div>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('exams.add_exam') }}">
+                    <div class="form-group"><label class="form-label">Exam Name <span class="req">*</span></label><input
+                            type="text" name="name" class="form-control" required placeholder="e.g. Annual Exam 2024">
+                    </div>
+                    <div class="form-group"><label class="form-label">Exam Type</label>
+                        <select name="exam_type" class="form-control">
+                            <option value="monthly">Monthly Test</option>
+                            <option value="mid-term">Mid-Term</option>
+                            <option value="annual">Annual</option>
+                            <option value="supplementary">Supplementary</option>
+                            <option value="practice">Practice Test</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Class / Section</label>
+                        <select name="class_section_id" class="form-control">
+                            <option value="">All Classes</option>{% for cls in classes %}<option value="{{ cls.id }}">{{
+                                cls.display_name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">Start Date</label><input type="date"
+                                name="start_date" class="form-control"></div>
+                        <div class="form-group"><label class="form-label">End Date</label><input type="date"
+                                name="end_date" class="form-control"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Academic Year</label><input type="text"
+                            name="academic_year" class="form-control" value="2024-25" placeholder="2024-25"></div>
+                    <button type="submit" class="btn btn-primary w-100" style="justify-content:center">✅ Create
+                        Exam</button>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">ℹ️ How It Works</div>
+            </div>
+            <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:14px">
+                    <div style="display:flex;gap:12px;align-items:flex-start">
+                        <div
+                            style="width:32px;height:32px;background:var(--gradient-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;flex-shrink:0">
+                            1</div>
+                        <div>
+                            <div style="font-weight:600">Create the Exam</div>
+                            <div style="font-size:12px;color:var(--text-muted)">Fill in exam details, type, class, and
+                                dates</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start">
+                        <div
+                            style="width:32px;height:32px;background:var(--gradient-secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;flex-shrink:0">
+                            2</div>
+                        <div>
+                            <div style="font-weight:600">Add Subjects</div>
+                            <div style="font-size:12px;color:var(--text-muted)">Assign subjects with total and passing
+                                marks</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start">
+                        <div
+                            style="width:32px;height:32px;background:var(--gradient-accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-weight:700;font-size:14px;flex-shrink:0">
+                            3</div>
+                        <div>
+                            <div style="font-weight:600">Enter Marks</div>
+                            <div style="font-size:12px;color:var(--text-muted)">Grade students — grades are
+                                auto-calculated</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start">
+                        <div
+                            style="width:32px;height:32px;background:var(--gradient-success);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;flex-shrink:0">
+                            4</div>
+                        <div>
+                            <div style="font-weight:600">View Results & PDF</div>
+                            <div style="font-size:12px;color:var(--text-muted)">Download branded result cards for each
+                                student</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

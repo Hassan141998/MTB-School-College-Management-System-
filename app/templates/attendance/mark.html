@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Mark Attendance — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Mark Attendance</h1>
+            <p class="page-subtitle">Select class and date to mark attendance</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('attendance.leave') }}" class="btn btn-outline">📋 Leave Applications</a>
+            <a href="{{ url_for('face.mark') }}" class="btn btn-secondary">🤖 Face Recognition</a>
+        </div>
+    </div>
+
+    <!-- Class & Date Selector -->
+    <form method="GET" class="filter-bar">
+        <select name="class_id" class="form-control" style="width:220px" required>
+            <option value="">Select Class</option>
+            {% for cls in classes %}<option value="{{ cls.id }}" {% if selected_class==cls.id|string %}selected{% endif
+                %}>{{ cls.display_name }}</option>{% endfor %}
+        </select>
+        <input type="date" name="date" class="form-control" style="width:180px" value="{{ att_date }}">
+        <button type="submit" class="btn btn-secondary">Load Students</button>
+    </form>
+
+    {% if students %}
+    <form method="POST" action="{{ url_for('attendance.mark') }}">
+        <input type="hidden" name="class_id" value="{{ selected_class }}">
+        <input type="hidden" name="att_date" value="{{ att_date }}">
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">✅ Attendance for {{ att_date }} — {{ students|length }} Students</div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-success btn-sm" data-mark-all="present">✓ All Present</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-mark-all="absent">✗ All Absent</button>
+                </div>
+            </div>
+            <div style="overflow-x:auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Reg No</th>
+                            <th>Student Name</th>
+                            <th>Attendance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                        {% set att = existing_att.get(s.id) %}
+                        <tr>
+                            <td class="text-muted">{{ loop.index }}</td>
+                            <td><span class="reg-no">{{ s.reg_no }}</span></td>
+                            <td>
+                                <div class="cell-name">{{ s.full_name }}</div>
+                            </td>
+                            <td>
+                                <div class="att-radio-group">
+                                    <label class="att-radio present"><input type="radio" name="status_{{ s.id }}"
+                                            value="present" {% if att and att.status=='present' or not att %}checked{%
+                                            endif %}> P</label>
+                                    <label class="att-radio absent"><input type="radio" name="status_{{ s.id }}"
+                                            value="absent" {% if att and att.status=='absent' %}checked{% endif %}>
+                                        A</label>
+                                    <label class="att-radio late"><input type="radio" name="status_{{ s.id }}"
+                                            value="late" {% if att and att.status=='late' %}checked{% endif %}>
+                                        L</label>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer" style="display:flex;justify-content:flex-end;gap:12px">
+                <button type="submit" class="btn btn-primary btn-lg">💾 Save Attendance</button>
+            </div>
+        </div>
+    </form>
+    {% elif selected_class %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <div class="empty-state-title">No students in this class</div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon">🏫</div>
+            <div class="empty-state-title">Select a class above to begin</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

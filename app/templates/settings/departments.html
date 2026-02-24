@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block title %}Settings — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Settings</h1>
+        </div>
+    </div>
+    <div class="grid-2">
+        <!-- Departments -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🏛️ Departments</div>
+                    <span class="badge badge-secondary">{{ departments|length }} departments</span>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>HOD</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in departments %}
+                            <tr>
+                                <td class="cell-name">{{ d.name }}</td>
+                                <td><span class="reg-no">{{ d.code or '—' }}</span></td>
+                                <td class="text-muted">{{ d.hod_name or '—' }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('settings.delete_department', id=d.id) }}"
+                                        data-confirm="Remove this department?">
+                                        <button type="submit" class="action-btn delete">🗑</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}<tr>
+                                <td colspan="4" style="text-align:center;padding:18px;color:var(--text-muted)">No
+                                    departments yet</td>
+                            </tr>{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <form method="POST" action="{{ url_for('settings.add_department') }}" class="d-flex gap-2">
+                        <input type="text" name="name" class="form-control" placeholder="Department name" required
+                            style="height:38px">
+                        <input type="text" name="code" class="form-control" placeholder="Code"
+                            style="width:90px;height:38px">
+                        <button type="submit" class="btn btn-primary btn-sm">+ Add</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Users -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">👥 System Users</div><a href="{{ url_for('settings.users') }}"
+                        class="btn btn-ghost btn-sm">Manage →</a>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users[:5] %}
+                            <tr>
+                                <td>
+                                    <div class="cell-name">{{ u.full_name }}</div>
+                                    <div class="cell-sub">{{ u.username }}</div>
+                                </td>
+                                <td><span class="badge badge-secondary">{{ u.role|capitalize }}</span></td>
+                                <td><span
+                                        class="badge {% if u.is_active %}badge-success{% else %}badge-danger{% endif %}">{{
+                                        'Active' if u.is_active else 'Inactive' }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Announcements -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📢 Announcements</div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('settings.add_announcement') }}">
+                        <div class="form-group"><label class="form-label">Title</label><input type="text" name="title"
+                                class="form-control" required placeholder="Announcement title"></div>
+                        <div class="form-group"><label class="form-label">Message</label><textarea name="content"
+                                class="form-control" rows="3" required
+                                placeholder="Write your announcement..."></textarea></div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Target</label>
+                                <select name="target_audience" class="form-control">
+                                    <option value="all">All</option>
+                                    <option value="students">Students</option>
+                                    <option value="teachers">Teachers</option>
+                                    <option value="parents">Parents</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Priority</label>
+                                <select name="priority" class="form-control">
+                                    <option value="normal">Normal</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" style="justify-content:center">📢
+                            Publish</button>
+                    </form>
+                </div>
+                <div style="padding:0;border-top:1px solid var(--border)">
+                    {% for ann in announcements[:3] %}
+                    <div class="announcement-item {{ ann.priority }}" style="padding:10px 18px">
+                        <div class="announcement-icon">{{ '🚨' if ann.priority == 'urgent' else '⚠️' if ann.priority ==
+                            'high' else '📢' }}</div>
+                        <div style="flex:1">
+                            <div class="announcement-title">{{ ann.title }}</div>
+                            <div class="announcement-meta">{{ ann.created_at.strftime('%d %b %Y') }}</div>
+                        </div>
+                        <form method="POST" action="{{ url_for('settings.delete_announcement', id=ann.id) }}"><button
+                                type="submit" class="action-btn delete">🗑</button></form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📅 Academic Calendar</div><a href="{{ url_for('settings.calendar') }}"
+                        class="btn btn-ghost btn-sm">Full Calendar →</a>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ev in events[:5] %}
+                            <tr>
+                                <td class="cell-name">{{ ev.title }}</td>
+                                <td>{{ ev.start_date.strftime('%d %b %Y') }}</td>
+                                <td><span
+                                        class="badge {% if ev.is_holiday %}badge-warning{% else %}badge-info{% endif %}">{{
+                                        'Holiday' if ev.is_holiday else ev.event_type|capitalize }}</span></td>
+                            </tr>
+                            {% else %}<tr>
+                                <td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">No
+                                    upcoming events</td>
+                            </tr>{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

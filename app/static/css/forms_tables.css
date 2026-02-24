@@ -1,0 +1,477 @@
+/* =====================================================
+   MTB School & College — Forms & Tables
+   ===================================================== */
+
+/* ─── Forms ─────────────────────────────────────────── */
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.form-label .req {
+    color: var(--primary);
+    margin-left: 2px;
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    font-size: 13.5px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: white;
+    color: var(--text);
+    outline: none;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+textarea.form-control {
+    height: auto;
+    min-height: 100px;
+    padding: 12px 14px;
+    resize: vertical;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
+}
+
+.form-control::placeholder {
+    color: var(--text-light);
+}
+
+.form-control:disabled {
+    background: var(--bg);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+select.form-control {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 10px center;
+    background-repeat: no-repeat;
+    background-size: 20px;
+    appearance: none;
+    padding-right: 36px;
+}
+
+.form-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.form-row.col-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.form-row.col-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Custom checkbox / radio */
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.form-check input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.form-check-label {
+    font-size: 13.5px;
+    color: var(--text);
+    cursor: pointer;
+}
+
+/* Input groups */
+.input-group {
+    position: relative;
+}
+
+.input-group .input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 15px;
+}
+
+.input-group .form-control {
+    padding-left: 40px;
+}
+
+.input-group .input-suffix {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* Search filter bar */
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.filter-bar .form-control {
+    height: 38px;
+    font-size: 13px;
+}
+
+.filter-bar .btn {
+    height: 38px;
+}
+
+/* ─── Tables ─────────────────────────────────────────── */
+
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    font-size: 13.5px;
+}
+
+.data-table thead {
+    background: var(--secondary);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.data-table thead th {
+    padding: 13px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.data-table thead th:first-child {
+    border-radius: var(--radius) 0 0 0;
+}
+
+.data-table thead th:last-child {
+    border-radius: 0 var(--radius) 0 0;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: var(--transition);
+}
+
+.data-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(255, 107, 53, 0.04);
+}
+
+.data-table td {
+    padding: 13px 16px;
+    color: var(--text);
+    vertical-align: middle;
+}
+
+.data-table td.text-muted {
+    color: var(--text-muted);
+}
+
+.data-table td.center {
+    text-align: center;
+}
+
+.data-table td.right {
+    text-align: right;
+}
+
+/* Sticky orange variant */
+.data-table.orange-header thead {
+    background: var(--primary);
+}
+
+/* Row striping */
+.data-table.striped tbody tr:nth-child(even) {
+    background: var(--surface-2);
+}
+
+.data-table.striped tbody tr:nth-child(even):hover {
+    background: rgba(255, 107, 53, 0.04);
+}
+
+/* Actions column */
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.action-btn.view {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+}
+
+.action-btn.view:hover {
+    background: #2563eb;
+    color: white;
+}
+
+.action-btn.edit {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+.action-btn.edit:hover {
+    background: #059669;
+    color: white;
+}
+
+.action-btn.delete {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+.action-btn.delete:hover {
+    background: #dc2626;
+    color: white;
+}
+
+.action-btn.pdf {
+    background: rgba(255, 107, 53, 0.12);
+    color: var(--primary);
+}
+
+.action-btn.pdf:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.action-btn.approve {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+.action-btn.approve:hover {
+    background: #059669;
+    color: white;
+}
+
+.action-btn.reject {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+.action-btn.reject:hover {
+    background: #dc2626;
+    color: white;
+}
+
+/* Student reg no */
+.reg-no {
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 12.5px;
+    background: rgba(255, 107, 53, 0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Avatar cell */
+.avatar-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cell-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: white;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.cell-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cell-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 13.5px;
+}
+
+.cell-sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+/* Attendance status cells */
+.att-present {
+    color: #059669;
+    font-weight: 600;
+}
+
+.att-absent {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.att-late {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.att-leave {
+    color: #7c3aed;
+    font-weight: 600;
+}
+
+/* Attendance radio buttons */
+.att-radio-group {
+    display: flex;
+    gap: 6px;
+}
+
+.att-radio {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    font-size: 12px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.att-radio input {
+    display: none;
+}
+
+.att-radio.present {
+    border-color: #10b981;
+    color: #059669;
+}
+
+.att-radio.present:has(input:checked) {
+    background: #10b981;
+    color: white;
+}
+
+.att-radio.absent {
+    border-color: #ef4444;
+    color: #dc2626;
+}
+
+.att-radio.absent:has(input:checked) {
+    background: #ef4444;
+    color: white;
+}
+
+.att-radio.late {
+    border-color: #f59e0b;
+    color: #d97706;
+}
+
+.att-radio.late:has(input:checked) {
+    background: #f59e0b;
+    color: white;
+}
+
+/* Progress bar */
+.progress-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--gradient-primary);
+    transition: width 0.5s ease;
+}
+
+.progress-fill.green {
+    background: var(--gradient-success);
+}
+
+.progress-fill.warning {
+    background: var(--gradient-accent);
+}
+
+.progress-fill.danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}

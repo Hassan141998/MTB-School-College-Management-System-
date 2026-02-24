@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Teachers — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Teachers</h1>
+            <p class="page-subtitle">Manage teaching staff</p>
+        </div>
+        <a href="{{ url_for('teachers.add_teacher') }}" class="btn btn-primary">+ Add Teacher</a>
+    </div>
+    <form method="GET" class="filter-bar">
+        <div class="input-group" style="flex:1;min-width:200px">
+            <span class="input-icon">🔍</span>
+            <input type="text" name="search" value="{{ search }}" class="form-control"
+                placeholder="Search by name or ID...">
+        </div>
+        <select name="dept_id" class="form-control" style="width:180px">
+            <option value="">All Departments</option>
+            {% for d in departments %}<option value="{{ d.id }}" {% if dept_id==d.id|string %}selected{% endif %}>{{
+                d.name }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="{{ url_for('teachers.list_teachers') }}" class="btn btn-outline">Reset</a>
+    </form>
+
+    {% if teachers %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Employee ID</th>
+                    <th>Teacher</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Phone</th>
+                    <th>Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in teachers %}
+                <tr>
+                    <td class="text-muted">{{ loop.index }}</td>
+                    <td><span class="reg-no">{{ t.employee_id }}</span></td>
+                    <td>
+                        <div class="avatar-cell">
+                            <div class="cell-avatar">{% if t.photo %}<img
+                                    src="{{ url_for('static', filename=t.photo) }}" alt="">{% else %}{{
+                                t.full_name[0]|upper }}{% endif %}</div>
+                            <div>
+                                <div class="cell-name">{{ t.full_name }}</div>
+                                <div class="cell-sub">{{ t.qualification or '—' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{% if t.department %}<span class="badge badge-secondary">{{ t.department.name }}</span>{% else
+                        %}—{% endif %}</td>
+                    <td>{{ t.designation or 'Teacher' }}</td>
+                    <td>{{ t.phone or '—' }}</td>
+                    <td>PKR {{ "{:,.0f}".format(t.basic_salary) }}</td>
+                    <td>
+                        <div class="actions">
+                            <a href="{{ url_for('teachers.view_teacher', id=t.id) }}" class="action-btn view">👁</a>
+                            <a href="{{ url_for('teachers.edit_teacher', id=t.id) }}" class="action-btn edit">✏️</a>
+                            <a href="{{ url_for('teachers.salary_records', id=t.id) }}" class="action-btn pdf"
+                                data-tooltip="Salary">💰</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon">👨‍🏫</div>
+            <div class="empty-state-title">No teachers found</div><a href="{{ url_for('teachers.add_teacher') }}"
+                class="btn btn-primary mt-3">Add Teacher</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

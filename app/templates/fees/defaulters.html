@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Fee Defaulters — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title text-danger">⚠️ Fee Defaulters</h1>
+            <p class="page-subtitle">Students with pending fees for {{ month }} {{ year }} — Total Defaulters: {{
+                defaulters|length }}</p>
+        </div>
+        <a href="{{ url_for('fees.payments') }}" class="btn btn-outline">← Payments</a>
+    </div>
+
+    <form method="GET" class="filter-bar">
+        <select name="month" class="form-control" style="width:150px">
+            {% for m in
+            ['January','February','March','April','May','June','July','August','September','October','November','December']
+            %}
+            <option value="{{ m }}" {% if m==month %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+        <select name="year" class="form-control" style="width:100px">
+            {% for yr in [today.year-1, today.year, today.year+1] %}
+            <option value="{{ yr }}" {% if yr|string==year|string %}selected{% endif %}>{{ yr }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-secondary">Check Defaulters</button>
+    </form>
+
+    {% if defaulters %}
+    <div class="card">
+        <div
+            style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600">Pending collections: PKR {{ "{:,.0f}".format(total_pending) }}</div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Print List</button>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Reg No</th>
+                        <th>Student Name</th>
+                        <th>Class</th>
+                        <th>Father Phone</th>
+                        <th>Expected Fee</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st, expected in defaulters %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><span class="reg-no">{{ st.reg_no }}</span></td>
+                        <td>
+                            <div class="cell-name">{{ st.full_name }}</div>
+                        </td>
+                        <td>{{ st.class_section.display_name if st.class_section else '—' }}</td>
+                        <td>{{ st.parent_phone or st.phone or '—' }}</td>
+                        <td><strong>PKR {{ "{:,.0f}".format(expected) }}</strong></td>
+                        <td>
+                            <a href="{{ url_for('fees.record_payment', student_id=st.id, month=month, year=year, amount=expected) }}"
+                                class="btn btn-success btn-sm">Record Payment</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon text-success">🎉</div>
+            <div class="empty-state-title">No Defaulters</div>
+            <div class="text-muted">All active students have paid their fees for {{ month }} {{ year }}.</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

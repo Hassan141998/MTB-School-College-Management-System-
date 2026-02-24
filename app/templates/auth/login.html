@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — MTB School & College</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms_tables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 44px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--gradient-primary);
+            border-radius: 20px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+        }
+
+        .login-logo h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .login-logo p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .login-divider {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin: 24px 0;
+            position: relative;
+        }
+
+        .login-divider::before,
+        .login-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .login-divider::before {
+            left: 0;
+        }
+
+        .login-divider::after {
+            right: 0;
+        }
+
+        .demo-users {
+            background: var(--surface-2);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+        }
+
+        .demo-users h4 {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .demo-user-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 8px 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            margin-bottom: 6px;
+            transition: var(--transition);
+            font-size: 13px;
+        }
+
+        .demo-user-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .demo-user-btn:hover {
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.04);
+        }
+
+        .demo-badge {
+            background: var(--gradient-primary);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="login-logo-icon">🏫</div>
+                <h1>MTB School & College</h1>
+                <p>Providing Quality Education Since 2005</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="flash-alert {{ category }}" style="margin-bottom:16px">
+                <span class="flash-icon">{% if category == 'success' %}✓{% elif category == 'danger' %}✕{% else %}ℹ{%
+                    endif %}</span>
+                <span class="flash-msg">{{ message }}</span>
+            </div>
+            {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <div class="input-group">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="username" name="username" class="form-control"
+                            placeholder="Enter your username" required autofocus>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-group">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="password" name="password" class="form-control"
+                            placeholder="Enter your password" required>
+                    </div>
+                </div>
+                <div class="form-group" style="display:flex;align-items:center;justify-content:space-between">
+                    <label class="form-check">
+                        <input type="checkbox" name="remember"> <span class="form-check-label">Remember me</span>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100"
+                    style="justify-content:center;font-size:15px;padding:12px">
+                    Sign In →
+                </button>
+            </form>
+
+            <div class="login-divider">Demo Accounts</div>
+
+            <div class="demo-users">
+                <h4>Quick Login</h4>
+                <button class="demo-user-btn" onclick="fillLogin('admin','admin123')">
+                    <span>👑</span> <span>Administrator</span> <span class="demo-badge">admin</span>
+                </button>
+                <button class="demo-user-btn" onclick="fillLogin('principal','principal123')">
+                    <span>🎓</span> <span>Principal</span> <span class="demo-badge">principal</span>
+                </button>
+                <button class="demo-user-btn" onclick="fillLogin('teacher1','teacher123')">
+                    <span>👨‍🏫</span> <span>Teacher</span> <span class="demo-badge">teacher</span>
+                </button>
+            </div>
+        </div>
+        <p style="text-align:center;color:rgba(255,255,255,0.4);font-size:12px;margin-top:20px">© 2024 MTB School &
+            College. All rights reserved.</p>
+    </div>
+    <script>
+        function fillLogin(u, p) {
+            document.getElementById('username').value = u;
+            document.getElementById('password').value = p;
+        }
+    </script>
+</body>
+
+</html>

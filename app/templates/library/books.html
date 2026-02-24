@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}Library — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Library Management</h1>
+            <p class="page-subtitle">{{ total_books }} books · {{ issued_count }} issued · {{ overdue_count }} overdue
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('library.issue_book') }}" class="btn btn-secondary">📤 Issue Book</a>
+            <a href="{{ url_for('library.add_book') }}" class="btn btn-primary">+ Add Book</a>
+        </div>
+    </div>
+
+    <form method="GET" class="filter-bar">
+        <div class="input-group" style="flex:1;min-width:200px"><span class="input-icon">🔍</span><input type="text"
+                name="search" value="{{ search }}" class="form-control" placeholder="Search title, author, ISBN...">
+        </div>
+        <select name="category" class="form-control" style="width:160px">
+            <option value="">All Categories</option>{% for c in categories %}<option value="{{ c }}" {% if cat_filter==c
+                %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="{{ url_for('library.books') }}" class="btn btn-outline">Reset</a>
+    </form>
+
+    {% if books %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ISBN</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Category</th>
+                    <th>Copies</th>
+                    <th>Available</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in books %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td style="font-family:monospace;font-size:12px">{{ b.isbn or '—' }}</td>
+                    <td>
+                        <div class="cell-name">{{ b.title }}</div>
+                    </td>
+                    <td class="text-muted">{{ b.author or '—' }}</td>
+                    <td>{% if b.category %}<span class="badge badge-secondary">{{ b.category }}</span>{% else %}—{%
+                        endif %}</td>
+                    <td style="text-align:center">{{ b.total_copies }}</td>
+                    <td style="text-align:center"><span
+                            class="badge {% if b.available_copies > 0 %}badge-success{% else %}badge-danger{% endif %}">{{
+                            b.available_copies }}</span></td>
+                    <td>
+                        <div class="actions">
+                            <a href="{{ url_for('library.issue_book') }}?book_id={{ b.id }}" class="action-btn edit"
+                                data-tooltip="Issue">📤</a>
+                            <a href="{{ url_for('library.edit_book', id=b.id) }}" class="action-btn view"
+                                data-tooltip="Edit">✏️</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon">📚</div>
+            <div class="empty-state-title">No books found</div><a href="{{ url_for('library.add_book') }}"
+                class="btn btn-primary mt-3">Add Book</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Issued books -->
+    <div class="card" style="margin-top:24px">
+        <div class="card-header">
+            <div class="card-title">📤 Currently Issued Books</div>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Book</th>
+                        <th>Issue Date</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in active_issues %}
+                    <tr>
+                        <td>
+                            <div class="cell-name">{{ issue.student.full_name if issue.student else 'N/A' }}</div>
+                            <div class="cell-sub">{{ issue.student.reg_no if issue.student else '' }}</div>
+                        </td>
+                        <td>
+                            <div class="cell-name">{{ issue.book.title if issue.book else 'N/A' }}</div>
+                        </td>
+                        <td>{{ issue.issue_date.strftime('%d %b %Y') if issue.issue_date else '—' }}</td>
+                        <td class="{{ 'text-danger fw-bold' if issue.is_overdue else '' }}">{{
+                            issue.due_date.strftime('%d %b %Y') if issue.due_date else '—' }}</td>
+                        <td><span
+                                class="badge {% if issue.is_overdue %}badge-danger{% else %}badge-success{% endif %}">{%
+                                if issue.is_overdue %}Overdue{% else %}Issued{% endif %}</span></td>
+                        <td>
+                            <form method="POST" action="{{ url_for('library.return_book', id=issue.id) }}"
+                                data-confirm="Return this book?"><button type="submit"
+                                    class="btn btn-success btn-sm">Return</button></form>
+                        </td>
+                    </tr>
+                    {% else %}<tr>
+                        <td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)">No books
+                            currently issued</td>
+                    </tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

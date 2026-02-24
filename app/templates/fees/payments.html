@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Fee Payments — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Fee Management</h1>
+            <p class="page-subtitle">Total Collected: PKR {{ "{:,.0f}".format(total_collected) }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('fees.structure') }}" class="btn btn-outline">⚙️ Fee Structure</a>
+            <a href="{{ url_for('fees.defaulters') }}" class="btn btn-accent">⚠️ Defaulters</a>
+            <a href="{{ url_for('fees.record_payment') }}" class="btn btn-primary">+ Record Payment</a>
+        </div>
+    </div>
+
+    <form method="GET" class="filter-bar">
+        <div class="input-group" style="flex:1;min-width:200px">
+            <span class="input-icon">🔍</span>
+            <input type="text" name="search" value="{{ search }}" class="form-control"
+                placeholder="Search receipt, student name...">
+        </div>
+        <select name="month" class="form-control" style="width:150px">
+            <option value="">All Months</option>
+            {% for m in months %}<option value="{{ m }}" {% if month_filter==m %}selected{% endif %}>{{ m }}</option>{%
+            endfor %}
+        </select>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+    </form>
+
+    {% if payments %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Receipt No</th>
+                    <th>Student</th>
+                    <th>Amount</th>
+                    <th>Month</th>
+                    <th>Method</th>
+                    <th>Date</th>
+                    <th>By</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <td style="font-family:monospace;font-size:12px;color:var(--primary)">{{ p.receipt_no }}</td>
+                    <td>
+                        <div class="cell-name">{{ p.student.full_name }}</div>
+                        <div class="cell-sub">{{ p.student.reg_no }}</div>
+                    </td>
+                    <td><strong>PKR {{ "{:,.0f}".format(p.total_paid) }}</strong></td>
+                    <td>{{ p.month or '—' }} {{ p.year or '' }}</td>
+                    <td><span class="badge badge-info">{{ p.payment_method|capitalize }}</span></td>
+                    <td>{{ p.payment_date.strftime('%d %b %Y') if p.payment_date else '—' }}</td>
+                    <td class="text-muted">{{ p.collected_by or '—' }}</td>
+                    <td><a href="{{ url_for('fees.download_receipt', id=p.id) }}" class="action-btn pdf" target="_blank"
+                            data-tooltip="Download PDF">📄</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <ul class="pagination">
+        {% if pagination.has_prev %}<li class="page-item"><a class="page-link"
+                href="{{ url_for('fees.payments', page=pagination.prev_num) }}">‹</a></li>{% endif %}
+        {% for p in pagination.iter_pages() %}{% if p %}<li
+            class="page-item {% if p == pagination.page %}active{% endif %}"><a class="page-link"
+                href="{{ url_for('fees.payments', page=p) }}">{{ p }}</a></li>{% else %}<li class="page-item disabled">
+            <span class="page-link">…</span></li>{% endif %}{% endfor %}
+        {% if pagination.has_next %}<li class="page-item"><a class="page-link"
+                href="{{ url_for('fees.payments', page=pagination.next_num) }}">›</a></li>{% endif %}
+    </ul>
+    {% endif %}
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon">💰</div>
+            <div class="empty-state-title">No payments found</div><a href="{{ url_for('fees.record_payment') }}"
+                class="btn btn-primary mt-3">Record Payment</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Exam Subjects — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Exam Subjects</h1>
+            <p class="page-subtitle">{{ exam.name }} — {{ exam.class_section.display_name if exam.class_section else
+                'All Classes' }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('exams.enter_marks', exam_id=exam.id) }}" class="btn btn-secondary">✏️ Enter Marks</a>
+            <a href="{{ url_for('exams.list_exams') }}" class="btn btn-outline">← Back</a>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <!-- Add Subject to Exam -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">➕ Assign Subject</div>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('exams.exam_subjects', exam_id=exam.id) }}">
+                    <div class="form-group">
+                        <label class="form-label">Subject <span class="req">*</span></label>
+                        <select name="subject_id" class="form-control" required>
+                            <option value="">Select Subject</option>
+                            {% for s in all_subjects %}
+                            <option value="{{ s.id }}">{{ s.name }} ({{ s.code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Total Marks <span class="req">*</span></label>
+                            <input type="number" name="total_marks" class="form-control" required value="100" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Passing Marks <span class="req">*</span></label>
+                            <input type="number" name="passing_marks" class="form-control" required value="40" min="1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Exam Date</label>
+                        <input type="date" name="exam_date" class="form-control"
+                            value="{{ exam.start_date.isoformat() if exam.start_date else '' }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" style="justify-content:center">Assign
+                        Subject</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assigned Subjects List -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📚 Assigned Subjects</div>
+                <span class="badge badge-secondary">{{ exam_subs|length }} subjects</span>
+            </div>
+            <div class="card-body" style="padding:0">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Marks (Pass/Total)</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for es in exam_subs %}
+                        <tr>
+                            <td>
+                                <div class="cell-name">{{ es.subject.name }}</div>
+                                <div class="cell-sub">{{ es.subject.code }}</div>
+                            </td>
+                            <td><span class="badge badge-warning">{{ es.passing_marks }}</span> / <strong>{{
+                                    es.total_marks }}</strong></td>
+                            <td>{{ es.exam_date.strftime('%d %b') if es.exam_date else '—' }}</td>
+                            <td>
+                                <form method="POST"
+                                    action="{{ url_for('exams.remove_exam_subject', exam_id=exam.id, subject_id=es.subject_id) }}"
+                                    data-confirm="Remove this subject from exam?">
+                                    <button type="submit" class="action-btn delete">🗑</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted)">No subjects
+                                assigned to this exam yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Leave Applications — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Leave Applications</h1>
+        </div>
+        <a href="{{ url_for('attendance.mark') }}" class="btn btn-outline">← Back</a>
+    </div>
+    <div class="grid-2">
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📝 New Leave Application</div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('attendance.leave') }}">
+                        <div class="form-group"><label class="form-label">Student</label>
+                            <select name="student_id" class="form-control" required>
+                                <option value="">Select Student</option>{% for s in students %}<option
+                                    value="{{ s.id }}">{{ s.full_name }} — {{ s.reg_no }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">From Date</label><input type="date"
+                                    name="from_date" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">To Date</label><input type="date"
+                                    name="to_date" class="form-control" required></div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Leave Type</label>
+                            <select name="leave_type" class="form-control">
+                                <option value="sick">Sick</option>
+                                <option value="casual">Casual</option>
+                                <option value="emergency">Emergency</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label class="form-label">Reason</label><textarea name="reason"
+                                class="form-control" rows="3" required placeholder="Reason for leave..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" style="justify-content:center">Submit
+                            Application</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📋 Applications</div>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Dates</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in applications %}
+                            <tr>
+                                <td>
+                                    <div class="cell-name">{{ app.student.full_name }}</div>
+                                    <div class="cell-sub">{{ app.student.reg_no }}</div>
+                                </td>
+                                <td>{{ app.from_date.strftime('%d %b') }} — {{ app.to_date.strftime('%d %b %Y') }}</td>
+                                <td><span class="badge badge-info">{{ app.leave_type|capitalize }}</span></td>
+                                <td><span
+                                        class="badge {% if app.status == 'approved' %}badge-success{% elif app.status == 'rejected' %}badge-danger{% else %}badge-warning{% endif %}">{{
+                                        app.status|capitalize }}</span></td>
+                                <td>
+                                    {% if app.status == 'pending' %}
+                                    <div class="actions">
+                                        <form method="POST"
+                                            action="{{ url_for('attendance.approve_leave', id=app.id) }}"
+                                            style="display:inline"><input type="hidden" name="action"
+                                                value="approve"><button type="submit" class="action-btn approve"
+                                                data-tooltip="Approve">✓</button></form>
+                                        <form method="POST"
+                                            action="{{ url_for('attendance.approve_leave', id=app.id) }}"
+                                            style="display:inline"><input type="hidden" name="action"
+                                                value="reject"><button type="submit" class="action-btn reject"
+                                                data-tooltip="Reject">✗</button></form>
+                                    </div>
+                                    {% else %}—{% endif %}
+                                </td>
+                            </tr>
+                            {% else %}<tr>
+                                <td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">No
+                                    applications found</td>
+                            </tr>{% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

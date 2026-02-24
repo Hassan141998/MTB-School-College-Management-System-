@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Reports — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Reports & Analytics</h1>
+        </div>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:24px">
+        <a href="{{ url_for('reports.student_performance') }}" class="stat-card orange"
+            style="text-decoration:none;cursor:pointer">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-info">
+                <div class="stat-value">Performance</div>
+                <div class="stat-label">Student exam results & grade analysis</div>
+            </div>
+        </a>
+        <a href="{{ url_for('reports.financial') }}" class="stat-card blue" style="text-decoration:none">
+            <div class="stat-icon">💰</div>
+            <div class="stat-info">
+                <div class="stat-value">Financial</div>
+                <div class="stat-label">Fee collections, defaulters & summaries</div>
+            </div>
+        </a>
+        <a href="{{ url_for('reports.attendance_report') }}" class="stat-card green" style="text-decoration:none">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <div class="stat-value">Attendance</div>
+                <div class="stat-label">Class-wise & student-wise analysis</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🎓 Student Performance</div><a
+                    href="{{ url_for('reports.export_performance') }}" class="btn btn-outline btn-sm">📥 Export</a>
+            </div>
+            <div class="card-body" style="padding:0">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th>Avg %</th>
+                            <th>Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in performance_data[:10] %}
+                        <tr>
+                            <td>
+                                <div class="cell-name">{{ row.name }}</div>
+                            </td>
+                            <td>{{ row.class_name }}</td>
+                            <td><strong>{{ row.avg_pct }}%</strong></td>
+                            <td><span class="grade-badge grade-{{ row.grade|replace('+','plus') }}">{{ row.grade
+                                    }}</span></td>
+                        </tr>
+                        {% else %}<tr>
+                            <td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">No data
+                                available</td>
+                        </tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">💰 Financial Summary</div><span class="badge badge-success">This Month</span>
+            </div>
+            <div class="card-body">
+                <div class="stats-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0">
+                    <div class="stat-card green" style="flex-direction:column;text-align:center;padding:14px">
+                        <div class="stat-value" style="font-size:20px">PKR {{ "{:,.0f}".format(financial.collected) }}
+                        </div>
+                        <div class="stat-label">Collected</div>
+                    </div>
+                    <div class="stat-card orange" style="flex-direction:column;text-align:center;padding:14px">
+                        <div class="stat-value" style="font-size:20px">PKR {{ "{:,.0f}".format(financial.pending) }}
+                        </div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                </div>
+                <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span
+                            class="text-muted">Total Students</span><strong>{{ financial.total_students }}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px"><span
+                            class="text-muted">Fee Paid</span><strong>{{ financial.paid_count }}</strong></div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px"><span
+                            class="text-muted">Defaulters</span><strong class="text-danger">{{ financial.defaulter_count
+                            }}</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Summary Table -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">✅ Class-wise Attendance (This Month)</div><a
+                href="{{ url_for('reports.export_attendance') }}" class="btn btn-outline btn-sm">📥 Export</a>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Total Students</th>
+                        <th>Present Days</th>
+                        <th>Avg %</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in att_data %}
+                    <tr>
+                        <td><span class="badge badge-secondary">{{ row.class_name }}</span></td>
+                        <td>{{ row.total_students }}</td>
+                        <td>{{ row.present_days }}</td>
+                        <td><strong>{{ row.avg_pct }}%</strong>
+                            <div class="progress-bar" style="margin-top:4px">
+                                <div class="progress-fill {% if row.avg_pct >= 75 %}green{% elif row.avg_pct >= 50 %}warning{% else %}danger{% endif %}"
+                                    style="width:{{ row.avg_pct }}%"></div>
+                            </div>
+                        </td>
+                        <td><span
+                                class="badge {% if row.avg_pct >= 75 %}badge-success{% elif row.avg_pct >= 50 %}badge-warning{% else %}badge-danger{% endif %}">{{
+                                'Good' if row.avg_pct >= 75 else 'Average' if row.avg_pct >= 50 else 'Poor' }}</span>
+                        </td>
+                    </tr>
+                    {% else %}<tr>
+                        <td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">No attendance
+                            data</td>
+                    </tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# SQLite database
+*.sqlite
+*.sqlite3
+instance/
+
+# Uploads and User Data
+app/static/uploads/
+app/static/face_encodings/
+*.pkl
+app/static/pdf_receipts/
+app/static/pdf_results/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# OS generated files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">My Profile</h1>
+        </div>
+    </div>
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">👤 Account Information</div>
+            </div>
+            <div class="card-body">
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+                    <div
+                        style="width:72px;height:72px;border-radius:50%;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:white;flex-shrink:0">
+                        {{ current_user.full_name[0]|upper }}</div>
+                    <div>
+                        <div style="font-size:20px;font-weight:700">{{ current_user.full_name }}</div>
+                        <div style="color:var(--text-muted)">{{ current_user.username }}</div><span
+                            class="badge badge-secondary mt-1">{{ current_user.role|capitalize }}</span>
+                    </div>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Email</div>
+                        <div class="info-value">{{ current_user.email or '—' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phone</div>
+                        <div class="info-value">{{ current_user.phone or '—' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Member Since</div>
+                        <div class="info-value">{{ current_user.created_at.strftime('%d %b %Y') if
+                            current_user.created_at else '—' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Last Login</div>
+                        <div class="info-value">{{ current_user.last_login.strftime('%d %b %Y %H:%M') if
+                            current_user.last_login else '—' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🔒 Change Password</div>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.profile') }}">
+                    <div class="form-group"><label class="form-label">Current Password <span
+                                class="req">*</span></label><input type="password" name="current_password"
+                            class="form-control" required></div>
+                    <div class="form-group"><label class="form-label">New Password <span
+                                class="req">*</span></label><input type="password" name="new_password"
+                            class="form-control" required minlength="6"></div>
+                    <div class="form-group"><label class="form-label">Confirm New Password <span
+                                class="req">*</span></label><input type="password" name="confirm_password"
+                            class="form-control" required></div>
+                    <button type="submit" class="btn btn-primary w-100" style="justify-content:center">Update
+                        Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

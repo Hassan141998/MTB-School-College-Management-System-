@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Fee Structure — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Fee Structure</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('fees.defaulters') }}" class="btn btn-accent">⚠️ Defaulters</a>
+            <a href="{{ url_for('fees.payments') }}" class="btn btn-outline">← Payments</a>
+        </div>
+    </div>
+    <div class="grid-2">
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">➕ Add Fee Type</div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('fees.add_structure') }}">
+                        <div class="form-group"><label class="form-label">Fee Name <span
+                                    class="req">*</span></label><input type="text" name="name" class="form-control"
+                                required placeholder="e.g. Monthly Tuition Fee"></div>
+                        <div class="form-group"><label class="form-label">Fee Type</label>
+                            <select name="fee_type" class="form-control">
+                                <option value="tuition">Tuition</option>
+                                <option value="admission">Admission</option>
+                                <option value="exam">Exam</option>
+                                <option value="library">Library</option>
+                                <option value="sports">Sports</option>
+                                <option value="lab">Laboratory</option>
+                                <option value="transport">Transport</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Amount (PKR) <span
+                                        class="req">*</span></label><input type="number" name="amount"
+                                    class="form-control" required placeholder="0" min="0"></div>
+                            <div class="form-group"><label class="form-label">Class</label><select name="class_name"
+                                    class="form-control">
+                                    <option value="">All Classes</option>{% for clsn in class_names %}<option
+                                        value="{{ clsn }}">{{ clsn }}</option>{% endfor %}
+                                </select></div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Due Day of Month</label><input type="number"
+                                name="due_days" class="form-control" placeholder="e.g. 10" min="1" max="31"></div>
+                        <button type="submit" class="btn btn-primary w-100" style="justify-content:center">+ Add Fee
+                            Type</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📋 Configured Fee Types</div>
+            </div>
+            <div style="overflow-x:auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Class</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fs in fee_structures %}
+                        <tr>
+                            <td class="cell-name">{{ fs.name }}</td>
+                            <td><span class="badge badge-info">{{ fs.fee_type|capitalize }}</span></td>
+                            <td><strong>PKR {{ "{:,.0f}".format(fs.amount) }}</strong></td>
+                            <td>{{ fs.class_name or 'All' }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('fees.delete_structure', id=fs.id) }}"
+                                    data-confirm="Delete this fee type?">
+                                    <button type="submit" class="action-btn delete" data-tooltip="Delete">🗑</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}<tr>
+                            <td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">No fee
+                                structures yet</td>
+                        </tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

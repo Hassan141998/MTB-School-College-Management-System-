@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Exams — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Exam Management</h1>
+        </div>
+        <a href="{{ url_for('exams.add_exam') }}" class="btn btn-primary">+ Create Exam</a>
+    </div>
+    {% if exams %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Exam Name</th>
+                    <th>Type</th>
+                    <th>Class</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in exams %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <div class="cell-name">{{ e.name }}</div>
+                        <div class="cell-sub">{{ e.academic_year }}</div>
+                    </td>
+                    <td><span class="badge badge-secondary">{{ e.exam_type|replace('-',' ')|capitalize }}</span></td>
+                    <td>{% if e.class_section %}{{ e.class_section.display_name }}{% else %}<span class="text-muted">All
+                            Classes</span>{% endif %}</td>
+                    <td>{{ e.start_date.strftime('%d %b %Y') if e.start_date else '—' }}</td>
+                    <td>{{ e.end_date.strftime('%d %b %Y') if e.end_date else '—' }}</td>
+                    <td><span class="badge {% if e.is_active %}badge-success{% else %}badge-gray{% endif %}">{{ 'Active'
+                            if e.is_active else 'Closed' }}</span></td>
+                    <td>
+                        <div class="actions">
+                            <a href="{{ url_for('exams.exam_subjects', exam_id=e.id) }}" class="action-btn view"
+                                data-tooltip="Subjects">📚</a>
+                            <a href="{{ url_for('exams.enter_marks', exam_id=e.id) }}" class="action-btn edit"
+                                data-tooltip="Enter Marks">✏️</a>
+                            <a href="{{ url_for('exams.results', exam_id=e.id) }}" class="action-btn pdf"
+                                data-tooltip="Results">📊</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon">📝</div>
+            <div class="empty-state-title">No exams created yet</div><a href="{{ url_for('exams.add_exam') }}"
+                class="btn btn-primary mt-3">Create Exam</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

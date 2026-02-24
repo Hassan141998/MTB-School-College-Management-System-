@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Enter Marks — MTB School{% endblock %}
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Enter Marks</h1>
+            <p class="page-subtitle">{{ exam.name }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('exams.results', exam_id=exam.id) }}" class="btn btn-secondary">📊 View Results</a>
+            <a href="{{ url_for('exams.list_exams') }}" class="btn btn-outline">← Back</a>
+        </div>
+    </div>
+
+    <!-- Subject selector -->
+    <div class="filter-bar">
+        {% for es in exam_subs %}
+        <a href="{{ url_for('exams.enter_marks', exam_id=exam.id, subject_id=es.subject_id) }}"
+            class="btn {% if selected_sub and selected_sub.subject_id == es.subject_id %}btn-primary{% else %}btn-outline{% endif %}">
+            {{ es.subject.name if es.subject else 'Subject' }}
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if selected_sub %}
+    <form method="POST" action="{{ url_for('exams.enter_marks', exam_id=exam.id) }}">
+        <input type="hidden" name="subject_id" value="{{ selected_sub.subject_id }}">
+        <input type="hidden" name="total_marks" value="{{ selected_sub.total_marks }}">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📝 {{ selected_sub.subject.name if selected_sub.subject else 'Subject' }} —
+                    Total: {{ selected_sub.total_marks }} marks</div>
+                <span class="badge badge-warning">Passing: {{ selected_sub.passing_marks }} marks</span>
+            </div>
+            <div style="overflow-x:auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Reg No</th>
+                            <th>Student Name</th>
+                            <th>Obtained Marks (out of {{ selected_sub.total_marks }})</th>
+                            <th>Grade Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in students %}
+                        {% set m = existing_marks.get(s.id) %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td><span class="reg-no">{{ s.reg_no }}</span></td>
+                            <td class="cell-name">{{ s.full_name }}</td>
+                            <td>
+                                <input type="number" name="marks_{{ s.id }}" class="form-control" style="width:160px"
+                                    value="{{ m.obtained_marks if m else '' }}" min="0"
+                                    max="{{ selected_sub.total_marks }}" step="0.5"
+                                    placeholder="0-{{ selected_sub.total_marks }}" data-marks="grade-{{ s.id }}"
+                                    data-total="{{ selected_sub.total_marks }}">
+                            </td>
+                            <td>
+                                <span id="grade-{{ s.id }}"
+                                    class="grade-badge {% if m %}grade-{{ m.grade|replace('+','plus') }}{% endif %}">
+                                    {% if m %}{{ m.grade }}{% else %}—{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer" style="display:flex;justify-content:flex-end">
+                <button type="submit" class="btn btn-primary">💾 Save Marks</button>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
