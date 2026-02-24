@@ -27,11 +27,16 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    _db_url = os.environ.get('DATABASE_URL', 'sqlite:///mtb_school.db')
-    if _db_url:
-        _db_url = _db_url.strip('"').strip("'")
+    _db_url = os.environ.get('DATABASE_URL')
+    
+    # Force failure with a clear message if no database URL is provided in Vercel
+    if not _db_url:
+        raise ValueError("CRITICAL: 'DATABASE_URL' is missing! You must add the Neon PostgreSQL URL to Vercel Settings -> Environment Variables and Redeploy.")
+        
+    _db_url = _db_url.strip('"').strip("'")
     if _db_url.startswith('postgres://'):
         _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+    
     SQLALCHEMY_DATABASE_URI = _db_url
 
     @classmethod
