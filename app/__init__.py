@@ -59,12 +59,18 @@ def create_app(config_name='default'):
     def inject_globals():
         from flask_login import current_user
         from app.models import Announcement
-        announcements = []
         try:
             announcements = Announcement.query.filter_by(is_active=True).order_by(
                 Announcement.created_at.desc()).limit(3).all()
         except Exception:
             pass
         return dict(current_user=current_user, announcements=announcements)
+
+    # Added to catch invisible Vercel 500 errors and display them
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        import traceback
+        # Return the stack trace as plain text for debugging
+        return f"<pre>INTERNAL SERVER ERROR:\n\n{traceback.format_exc()}</pre>", 500
 
     return app
