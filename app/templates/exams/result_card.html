@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Result Card — {{ student.full_name }}{% endblock %}
+{% block page_title %}Result Card{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Result Card</h1></div>
+    <div class="page-actions">
+      <a href="{{ url_for('exams.result_card_pdf', exam_id=exam.id, student_id=student.id) }}" class="btn btn-primary" target="_blank"><i class="bi bi-file-earmark-pdf-fill"></i> Download PDF</a>
+      <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer-fill"></i> Print</button>
+      <a href="{{ url_for('exams.results', id=exam.id) }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+  </div>
+</div>
+<div style="max-width:640px">
+  <div class="card">
+    <div class="card-body" style="padding:32px">
+      <div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid var(--primary)">
+        <div style="font-size:24px;font-weight:800;color:var(--primary)">MTB School & College</div>
+        <div style="font-size:15px;font-weight:700;margin-top:4px">{{ exam.name }}</div>
+        <div style="font-size:12px;color:var(--text-muted)">{{ exam.start_date | date_fmt }}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:18px;font-weight:700">{{ student.full_name }}</div>
+          <div style="font-size:13px;color:var(--text-muted)">{{ student.reg_no }} • Roll #{{ student.roll_no or '—' }}</div>
+          <div style="font-size:13px;color:var(--text-muted)">{{ student.class_section.display_name if student.class_section else '—' }}</div>
+        </div>
+        <div class="text-right">
+          <div style="font-size:32px;font-weight:800;color:var(--primary)">{{ result.overall_grade }}</div>
+          <div style="font-size:13px;color:var(--text-muted)">Overall Grade</div>
+          <span class="badge {{ 'badge-success' if result.passed else 'badge-danger' }}" style="margin-top:4px">{{ 'PASS' if result.passed else 'FAIL' }}</span>
+        </div>
+      </div>
+      <table class="table" style="font-size:13.5px">
+        <thead><tr><th>Subject</th><th>Marks</th><th>Total</th><th>%</th><th>Grade</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for row in subject_rows %}
+          <tr>
+            <td>{{ row.subject_name }}</td>
+            <td><strong>{{ row.marks_obtained }}</strong></td>
+            <td>{{ row.total_marks }}</td>
+            <td>{{ row.percentage | percentage }}</td>
+            <td><span class="badge {{ row.grade | grade_color }}">{{ row.grade }}</span></td>
+            <td><span class="badge {{ 'badge-success' if row.passed else 'badge-danger' }}">{{ 'Pass' if row.passed else 'Fail' }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr style="background:var(--primary-bg);font-weight:700">
+            <td>Total</td>
+            <td>{{ result.total_obtained }}</td>
+            <td>{{ result.total_max }}</td>
+            <td>{{ result.percentage | percentage }}</td>
+            <td><span class="badge {{ result.overall_grade | grade_color }}">{{ result.overall_grade }}</span></td>
+            <td><span class="badge {{ 'badge-success' if result.passed else 'badge-danger' }}">{{ 'Pass' if result.passed else 'Fail' }}</span></td>
+          </tr>
+        </tfoot>
+      </table>
+      <div style="display:flex;justify-content:space-between;margin-top:40px;padding-top:16px;border-top:1px solid var(--border-light);font-size:12px;color:var(--text-muted)">
+        <div style="text-align:center"><div style="border-top:1px solid;padding-top:8px;margin-top:36px;width:130px">Class Teacher</div></div>
+        <div style="text-align:center"><div style="border-top:1px solid;padding-top:8px;margin-top:36px;width:130px">Principal</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

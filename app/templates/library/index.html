@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Library{% endblock %}
+{% block page_title %}Library{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Library Management</h1><p class="page-subtitle">{{ pagination.total }} books in collection</p></div>
+    <div class="page-actions">
+      <a href="{{ url_for('library.issue') }}" class="btn btn-outline-primary"><i class="bi bi-book-fill"></i> Issue Book</a>
+      <a href="{{ url_for('library.issued_list') }}" class="btn btn-outline-secondary"><i class="bi bi-list-check"></i> Issued Books</a>
+      {% if current_user.role in ('admin','librarian') %}
+      <a href="{{ url_for('library.add_book') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Book</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<form method="GET" class="filter-bar">
+  <div class="form-group">
+    <label class="form-label">Search</label>
+    <div class="input-group">
+      <input type="text" name="q" class="form-control" placeholder="Title, Author, ISBN…" value="{{ q }}">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Category</label>
+    <select name="category" class="form-control" data-auto-submit>
+      <option value="">All Categories</option>
+      {% for cat in categories %}<option value="{{ cat }}" {% if category==cat %}selected{% endif %}>{{ cat }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Availability</label>
+    <select name="available" class="form-control" data-auto-submit>
+      <option value="">All</option>
+      <option value="1" {% if available=='1' %}selected{% endif %}>Available Only</option>
+    </select>
+  </div>
+  {% if q or category or available %}<a href="{{ url_for('library.index') }}" class="btn btn-light" style="align-self:flex-end"><i class="bi bi-x-lg"></i> Clear</a>{% endif %}
+</form>
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>#</th><th>Title</th><th>Author</th><th>ISBN</th><th>Category</th><th>Total</th><th>Available</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody>
+      {% for b in books %}
+      <tr>
+        <td class="text-muted">{{ loop.index }}</td>
+        <td><div class="avatar-info"><div class="avatar-name">{{ b.title }}</div><div class="avatar-sub fs-sm">{{ b.publisher or '—' }} {% if b.publication_year %}({{ b.publication_year }}){% endif %}</div></div></td>
+        <td>{{ b.author }}</td>
+        <td><code>{{ b.isbn or '—' }}</code></td>
+        <td>{{ b.category or '—' }}</td>
+        <td>{{ b.total_copies }}</td>
+        <td>
+          <span class="badge {{ 'badge-success' if b.available_copies > 0 else 'badge-danger' }}">{{ b.available_copies }}</span>
+        </td>
+        <td><span class="badge {{ 'badge-success' if b.available_copies > 0 else 'badge-warning' }}">{{ 'Available' if b.available_copies > 0 else 'All Issued' }}</span></td>
+        <td>
+          <div class="table-actions">
+            <a href="{{ url_for('library.issue') }}?book_id={{ b.id }}" class="btn btn-xs btn-outline-primary" title="Issue" {% if b.available_copies==0 %}style="pointer-events:none;opacity:.5"{% endif %}><i class="bi bi-book-fill"></i></a>
+            {% if current_user.role in ('admin','librarian') %}
+            <a href="{{ url_for('library.edit_book', id=b.id) }}" class="btn btn-xs btn-outline-secondary" title="Edit"><i class="bi bi-pencil-fill"></i></a>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-book"></i></div><div class="empty-state-title">No Books Found</div>{% if current_user.role in ('admin','librarian') %}<a href="{{ url_for('library.add_book') }}" class="btn btn-primary mt-3">Add First Book</a>{% endif %}</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if pagination.pages > 1 %}
+  <div class="pagination-wrapper">
+    <div class="pagination-info">Page {{ pagination.page }} of {{ pagination.pages }}</div>
+    <div class="pagination">
+      {% for p in pagination.iter_pages() %}{% if p %}<a href="?page={{ p }}&q={{ q }}&category={{ category }}&available={{ available }}" class="page-btn {% if p==pagination.page %}active{% endif %}">{{ p }}</a>{% else %}<span class="page-ellipsis">…</span>{% endif %}{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

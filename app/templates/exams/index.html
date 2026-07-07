@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Exams{% endblock %}
+{% block page_title %}Exams{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Exams & Marks</h1><p class="page-subtitle">{{ exams|length }} exams scheduled</p></div>
+    <div class="page-actions">
+      {% if current_user.role in ('admin','principal','hod') %}
+      <a href="{{ url_for('exams.add') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Create Exam</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div class="filter-bar">
+  {% for s in ['all','upcoming','ongoing','completed'] %}
+  <a href="?status={{ s }}" class="btn {{ 'btn-primary' if status==s else 'btn-light' }} btn-sm">{{ s | title }}</a>
+  {% endfor %}
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px">
+  {% for exam in exams %}
+  <div class="card hover-lift">
+    <div class="card-header">
+      <h5 class="card-title"><i class="bi bi-journal-text"></i> {{ exam.name }}</h5>
+      <span class="badge {{ {'upcoming':'badge-info','ongoing':'badge-warning','completed':'badge-success'}[exam.status] }}">{{ exam.status | title }}</span>
+    </div>
+    <div class="card-body">
+      <ul class="detail-list">
+        <li><span class="detail-key"><i class="bi bi-tag-fill"></i> Type</span><span class="detail-val">{{ exam.exam_type | replace('_',' ') | title }}</span></li>
+        <li><span class="detail-key"><i class="bi bi-people-fill"></i> Class</span><span class="detail-val">{{ exam.class_name or 'All Classes' }}</span></li>
+        <li><span class="detail-key"><i class="bi bi-calendar-fill"></i> Date</span><span class="detail-val">{{ exam.start_date | date_fmt }}{% if exam.end_date %} — {{ exam.end_date | date_fmt }}{% endif %}</span></li>
+        <li><span class="detail-key"><i class="bi bi-book-fill"></i> Subjects</span><span class="detail-val">{{ exam.subjects|length }} subjects</span></li>
+      </ul>
+    </div>
+    <div class="card-footer">
+      <a href="{{ url_for('exams.view', id=exam.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye-fill"></i> View</a>
+      {% if current_user.role in ('admin','principal','hod','teacher') %}
+      <a href="{{ url_for('exams.enter_marks', id=exam.id) }}" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i> Enter Marks</a>
+      {% endif %}
+      {% if exam.status=='completed' %}
+      <a href="{{ url_for('exams.results', id=exam.id) }}" class="btn btn-sm btn-outline-success ms-auto"><i class="bi bi-bar-chart-fill"></i> Results</a>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="card" style="grid-column:1/-1">
+    <div class="card-body">
+      <div class="empty-state"><div class="empty-state-icon"><i class="bi bi-journal-x"></i></div><div class="empty-state-title">No Exams Found</div>
+        {% if current_user.role in ('admin','principal','hod') %}<a href="{{ url_for('exams.add') }}" class="btn btn-primary mt-3">Create First Exam</a>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

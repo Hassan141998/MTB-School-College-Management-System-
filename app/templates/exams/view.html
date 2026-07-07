@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ exam.name }}{% endblock %}
+{% block page_title %}Exam Details{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group">
+      <h1 class="page-title">{{ exam.name }}</h1>
+      <div class="breadcrumb">
+        <div class="breadcrumb-item"><a href="{{ url_for('exams.index') }}">Exams</a></div>
+        <span class="breadcrumb-sep"><i class="bi bi-chevron-right"></i></span>
+        <div class="breadcrumb-item active">{{ exam.name }}</div>
+      </div>
+    </div>
+    <div class="page-actions">
+      <a href="{{ url_for('exams.enter_marks', id=exam.id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> Enter Marks</a>
+      {% if exam.status=='completed' %}<a href="{{ url_for('exams.results', id=exam.id) }}" class="btn btn-success"><i class="bi bi-bar-chart-fill"></i> View Results</a>{% endif %}
+    </div>
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start">
+  <div>
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="card-title"><i class="bi bi-book-fill"></i> Subjects ({{ exam.subjects|length }})</h5>
+        {% if current_user.role in ('admin','principal','hod') %}
+        <a href="{{ url_for('exams.add_subject', id=exam.id) }}" class="btn btn-xs btn-primary"><i class="bi bi-plus-lg"></i> Add Subject</a>
+        {% endif %}
+      </div>
+      <div class="card-body p-0">
+        <table class="table">
+          <thead><tr><th>Subject</th><th>Total Marks</th><th>Passing Marks</th><th>Date</th><th>Time</th><th style="text-align:right">Marks Entered</th></tr></thead>
+          <tbody>
+            {% for es in exam.subjects %}
+            <tr>
+              <td><strong>{{ es.subject.name }}</strong></td>
+              <td>{{ es.total_marks }}</td>
+              <td>{{ es.passing_marks }}</td>
+              <td>{{ es.exam_date | date_fmt if es.exam_date else '—' }}</td>
+              <td>{{ es.start_time or '—' }}</td>
+              <td style="text-align:right">
+                <span class="badge {{ 'badge-success' if es.marks|length > 0 else 'badge-light' }}">
+                  {{ es.marks|length }} entered
+                </span>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6"><div class="empty-state" style="padding:20px"><div class="empty-state-text">No subjects added yet</div></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h5 class="card-title"><i class="bi bi-info-circle-fill"></i> Exam Info</h5></div>
+    <div class="card-body">
+      <ul class="detail-list">
+        <li><span class="detail-key"><i class="bi bi-tag-fill"></i> Type</span><span class="detail-val">{{ exam.exam_type | replace('_',' ') | title }}</span></li>
+        <li><span class="detail-key"><i class="bi bi-people-fill"></i> Class</span><span class="detail-val">{{ exam.class_section.display_name if exam.class_section else 'All Classes' }}</span></li>
+        <li><span class="detail-key"><i class="bi bi-calendar-fill"></i> Dates</span><span class="detail-val">{{ exam.start_date | date_fmt }}{% if exam.end_date %} — {{ exam.end_date | date_fmt }}{% endif %}</span></li>
+        <li><span class="detail-key"><i class="bi bi-activity"></i> Status</span><span class="detail-val"><span class="badge {{ {'upcoming':'badge-info','ongoing':'badge-warning','completed':'badge-success'}[exam.status] }}">{{ exam.status | title }}</span></span></li>
+      </ul>
+      {% if exam.description %}<p class="text-muted" style="font-size:13px;margin-top:8px">{{ exam.description }}</p>{% endif %}
+      {% if current_user.role in ('admin','principal') %}
+      <div class="divider"></div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Update Status</div>
+      <div class="d-flex gap-2">
+        {% for s in ['upcoming','ongoing','completed'] %}
+        <form method="POST" action="{{ url_for('exams.update_status', id=exam.id) }}" style="flex:1">
+          <input type="hidden" name="status" value="{{ s }}">
+          <button type="submit" class="btn btn-xs w-100 {{ 'btn-primary' if exam.status==s else 'btn-light' }}">{{ s | title }}</button>
+        </form>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

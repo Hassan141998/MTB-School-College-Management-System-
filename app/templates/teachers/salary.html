@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Salary — {{ teacher.full_name }}{% endblock %}
+{% block page_title %}Salary Records{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">{{ teacher.full_name }} — Salary</h1></div>
+    <div class="page-actions">
+      <a href="{{ url_for('teachers.view', id=teacher.id) }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a>
+      <a href="{{ url_for('teachers.add_salary', id=teacher.id) }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Record</a>
+    </div>
+  </div>
+</div>
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>Month</th><th>Basic Salary</th><th>Allowances</th><th>Deductions</th><th>Net Salary</th><th>Paid Date</th><th>Status</th><th>Remarks</th></tr></thead>
+    <tbody>
+      {% for s in salary_records %}
+      <tr>
+        <td><strong>{{ s.month.strftime('%B %Y') }}</strong></td>
+        <td>{{ s.basic_salary | currency }}</td>
+        <td class="text-success">+{{ s.allowances | currency }}</td>
+        <td class="text-danger">-{{ s.deductions | currency }}</td>
+        <td><strong>{{ s.net_salary | currency }}</strong></td>
+        <td>{{ s.paid_date | date_fmt if s.paid_date else '—' }}</td>
+        <td><span class="badge {{ 'badge-success' if s.status=='paid' else 'badge-warning' }}">{{ s.status | title }}</span></td>
+        <td class="text-muted fs-sm">{{ s.remarks or '—' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-cash-coin"></i></div><div class="empty-state-title">No Salary Records</div><a href="{{ url_for('teachers.add_salary', id=teacher.id) }}" class="btn btn-primary mt-3">Add First Record</a></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

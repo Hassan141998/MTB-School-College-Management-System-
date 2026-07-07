@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Student Performance{% endblock %}
+{% block page_title %}Student Performance{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Student Performance Report</h1></div>
+    <div class="page-actions">
+      <a href="{{ url_for('reports.performance_excel') }}?exam_id={{ exam_id or '' }}&class_id={{ class_id or '' }}" class="btn btn-light"><i class="bi bi-download"></i> Export Excel</a>
+      <a href="{{ url_for('reports.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+  </div>
+</div>
+<form method="GET" class="filter-bar">
+  <div class="form-group">
+    <label class="form-label">Exam</label>
+    <select name="exam_id" class="form-control" data-auto-submit>
+      <option value="">Select Exam</option>
+      {% for e in exams %}<option value="{{ e.id }}" {% if exam_id==e.id %}selected{% endif %}>{{ e.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Class</label>
+    <select name="class_id" class="form-control" data-auto-submit>
+      <option value="">All Classes</option>
+      {% for cls in classes %}<option value="{{ cls.id }}" {% if class_id==cls.id %}selected{% endif %}>{{ cls.display_name }}</option>{% endfor %}
+    </select>
+  </div>
+</form>
+{% if results %}
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>Rank</th><th>Student</th><th>Class</th><th>Total Marks</th><th>Obtained</th><th>%</th><th>Grade</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for r in results %}
+      <tr>
+        <td><strong>#{{ loop.index }}</strong></td>
+        <td><div class="avatar-info"><div class="avatar-name">{{ r.student.full_name }}</div><div class="avatar-sub">{{ r.student.reg_no }}</div></div></td>
+        <td>{{ r.student.class_section.display_name if r.student.class_section else '—' }}</td>
+        <td>{{ r.total_max }}</td>
+        <td><strong>{{ r.total_obtained }}</strong></td>
+        <td>
+          <div class="progress-labeled">
+            <div class="progress" style="height:5px"><div class="progress-bar {{ 'success' if r.percentage>=50 else 'danger' }}" style="width:{{ r.percentage }}%"></div></div>
+            <span class="progress-val">{{ r.percentage | percentage }}</span>
+          </div>
+        </td>
+        <td><span class="badge {{ r.overall_grade | grade_color }}">{{ r.overall_grade }}</span></td>
+        <td><span class="badge {{ 'badge-success' if r.passed else 'badge-danger' }}">{{ 'Pass' if r.passed else 'Fail' }}</span></td>
+        <td><a href="{{ url_for('exams.result_card', exam_id=exam_id, student_id=r.student.id) }}" class="btn btn-xs btn-outline-secondary"><i class="bi bi-file-earmark-person-fill"></i></a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-bar-chart"></i></div><div class="empty-state-title">{{ 'No Results Found' if exam_id else 'Select an Exam' }}</div><div class="empty-state-text">{{ 'No marks have been entered yet.' if exam_id else 'Choose an exam above to view performance data.' }}</div></div></div></div>
+{% endif %}
+{% endblock %}

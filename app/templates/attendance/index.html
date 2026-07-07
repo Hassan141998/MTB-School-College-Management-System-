@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block page_title %}Attendance{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group">
+      <h1 class="page-title">Attendance Dashboard</h1>
+      <p class="page-subtitle">{{ today.strftime('%A, %d %B %Y') }}</p>
+    </div>
+    <div class="page-actions">
+      <a href="{{ url_for('attendance.report') }}" class="btn btn-outline-secondary"><i class="bi bi-bar-chart-fill"></i> Report</a>
+      <a href="{{ url_for('attendance.leave_list') }}" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-check-fill"></i> Leave Requests</a>
+      <a href="{{ url_for('face.mark') }}" class="btn btn-outline-primary"><i class="bi bi-camera-fill"></i> Face Attendance</a>
+      <a href="{{ url_for('attendance.mark') }}" class="btn btn-primary"><i class="bi bi-pencil-square"></i> Mark Attendance</a>
+    </div>
+  </div>
+</div>
+
+<div class="stats-grid stagger-children" style="grid-template-columns:repeat(4,1fr)">
+  <div class="stat-card success">
+    <div class="stat-icon"><i class="bi bi-person-check-fill"></i></div>
+    <div class="stat-body"><div class="stat-value">{{ total_present }}</div><div class="stat-label">Present Today</div></div>
+  </div>
+  <div class="stat-card danger">
+    <div class="stat-icon"><i class="bi bi-person-x-fill"></i></div>
+    <div class="stat-body"><div class="stat-value">{{ total_absent }}</div><div class="stat-label">Absent Today</div></div>
+  </div>
+  <div class="stat-card accent">
+    <div class="stat-icon"><i class="bi bi-check2-all"></i></div>
+    <div class="stat-body"><div class="stat-value">{{ total_marked }}</div><div class="stat-label">Records Marked</div></div>
+  </div>
+  <div class="stat-card secondary">
+    <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+    <div class="stat-body"><div class="stat-value">{{ total_students }}</div><div class="stat-label">Total Students</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h5 class="card-title"><i class="bi bi-grid-fill"></i> Mark by Class</h5></div>
+  <div class="card-body">
+    <div class="quick-links">
+      {% for cls in classes %}
+      <a href="{{ url_for('attendance.mark') }}?class_id={{ cls.id }}" class="quick-link">
+        <i class="bi bi-people-fill"></i>
+        {{ cls.display_name }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

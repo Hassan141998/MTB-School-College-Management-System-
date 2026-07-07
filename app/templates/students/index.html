@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block page_title %}Students{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group">
+      <h1 class="page-title">Student Management</h1>
+      <p class="page-subtitle">{{ pagination.total }} students registered</p>
+    </div>
+    <div class="page-actions">
+      <a href="{{ url_for('students.export', class_id=class_id or '', status=status) }}" class="btn btn-light">
+        <i class="bi bi-download"></i> Export Excel
+      </a>
+      {% if current_user.role in ('admin','principal','receptionist') %}
+      <a href="{{ url_for('students.add') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus-fill"></i> Add Student
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<form method="GET" class="filter-bar">
+  <div class="form-group">
+    <label class="form-label">Search</label>
+    <div class="input-group">
+      <input type="text" name="q" class="form-control" placeholder="Name, Reg No, Phone…" value="{{ q }}">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Class</label>
+    <select name="class_id" class="form-control" data-auto-submit>
+      <option value="">All Classes</option>
+      {% for cls in classes %}
+      <option value="{{ cls.id }}" {% if class_id == cls.id %}selected{% endif %}>{{ cls.display_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Status</label>
+    <select name="status" class="form-control" data-auto-submit>
+      <option value="active"   {% if status=='active'   %}selected{% endif %}>Active</option>
+      <option value="inactive" {% if status=='inactive' %}selected{% endif %}>Inactive</option>
+      <option value="all"      {% if status=='all'      %}selected{% endif %}>All</option>
+    </select>
+  </div>
+  {% if q or class_id %}
+  <a href="{{ url_for('students.index') }}" class="btn btn-light" style="align-self:flex-end">
+    <i class="bi bi-x-lg"></i> Clear
+  </a>
+  {% endif %}
+</form>
+
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>#</th><th>Student</th><th>Reg No</th><th>Class</th>
+        <th>Father</th><th>Phone</th><th>Admission</th><th>Status</th>
+        <th style="text-align:right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      <tr>
+        <td class="text-muted fs-sm">{{ loop.index + (pagination.page-1)*20 }}</td>
+        <td>
+          <div class="table-avatar">
+            <div class="avatar-circle">
+              {% if s.photo %}<img src="{{ url_for('static', filename=s.photo) }}" alt="">
+              {% else %}{{ s.full_name | initials }}{% endif %}
+            </div>
+            <div class="avatar-info">
+              <div class="avatar-name">{{ s.full_name }}</div>
+              <div class="avatar-sub">Roll #{{ s.roll_no or '—' }}</div>
+            </div>
+          </div>
+        </td>
+        <td><code>{{ s.reg_no }}</code></td>
+        <td>{{ s.class_section.display_name if s.class_section else '—' }}</td>
+        <td>{{ s.father_name or '—' }}</td>
+        <td>{{ s.phone or '—' }}</td>
+        <td>{{ s.admission_date | date_fmt }}</td>
+        <td><span class="badge {{ 'badge-success' if s.is_active else 'badge-danger' }}">{{ 'Active' if s.is_active else 'Inactive' }}</span></td>
+        <td>
+          <div class="table-actions">
+            <a href="{{ url_for('students.view', id=s.id) }}" class="btn btn-xs btn-outline-secondary" title="View"><i class="bi bi-eye-fill"></i></a>
+            {% if current_user.role in ('admin','principal','receptionist') %}
+            <a href="{{ url_for('students.edit', id=s.id) }}" class="btn btn-xs btn-outline-primary" title="Edit"><i class="bi bi-pencil-fill"></i></a>
+            {% endif %}
+            <a href="{{ url_for('fees.collect') }}?student_id={{ s.id }}" class="btn btn-xs btn-light" title="Collect Fee"><i class="bi bi-cash-coin"></i></a>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9">
+        <div class="empty-state">
+          <div class="empty-state-icon"><i class="bi bi-person-x"></i></div>
+          <div class="empty-state-title">No Students Found</div>
+          <div class="empty-state-text">{% if q %}No results for "{{ q }}"{% else %}No students registered yet{% endif %}</div>
+          {% if current_user.role in ('admin','principal','receptionist') %}
+          <a href="{{ url_for('students.add') }}" class="btn btn-primary mt-3">Add First Student</a>
+          {% endif %}
+        </div>
+      </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if pagination.pages > 1 %}
+  <div class="pagination-wrapper">
+    <div class="pagination-info">Showing {{ ((pagination.page-1)*20)+1 }}–{{ [pagination.page*20, pagination.total]|min }} of {{ pagination.total }}</div>
+    <div class="pagination">
+      <a href="?page={{ pagination.prev_num }}&q={{ q }}&class_id={{ class_id or '' }}&status={{ status }}" class="page-btn {% if not pagination.has_prev %}disabled{% endif %}"><i class="bi bi-chevron-left"></i></a>
+      {% for p in pagination.iter_pages() %}
+        {% if p %}<a href="?page={{ p }}&q={{ q }}&class_id={{ class_id or '' }}&status={{ status }}" class="page-btn {% if p==pagination.page %}active{% endif %}">{{ p }}</a>
+        {% else %}<span class="page-ellipsis">…</span>{% endif %}
+      {% endfor %}
+      <a href="?page={{ pagination.next_num }}&q={{ q }}&class_id={{ class_id or '' }}&status={{ status }}" class="page-btn {% if not pagination.has_next %}disabled{% endif %}"><i class="bi bi-chevron-right"></i></a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

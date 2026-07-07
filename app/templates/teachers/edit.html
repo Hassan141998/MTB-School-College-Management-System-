@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ teacher.full_name }}{% endblock %}
+{% block page_title %}Edit Teacher{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Edit Teacher</h1></div>
+    <div class="page-actions"><a href="{{ url_for('teachers.view', id=teacher.id) }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a></div>
+  </div>
+</div>
+<form method="POST" enctype="multipart/form-data">
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:start">
+    <div>
+      <div class="card mb-4">
+        <div class="card-header"><h5 class="card-title"><i class="bi bi-person-fill"></i> Personal Information</h5></div>
+        <div class="card-body">
+          <div class="form-row cols-2">
+            <div class="form-group"><label class="form-label">Full Name <span class="required">*</span></label><input type="text" name="full_name" class="form-control" required value="{{ teacher.full_name }}"></div>
+            <div class="form-group"><label class="form-label">Gender</label><select name="gender" class="form-control"><option value="">Select</option><option value="male" {% if teacher.gender=='male' %}selected{% endif %}>Male</option><option value="female" {% if teacher.gender=='female' %}selected{% endif %}>Female</option></select></div>
+            <div class="form-group"><label class="form-label">Phone</label><input type="text" name="phone" class="form-control phone-input" value="{{ teacher.phone or '' }}"></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ teacher.email or '' }}"></div>
+            <div class="form-group"><label class="form-label">CNIC</label><input type="text" name="cnic" class="form-control cnic-input" value="{{ teacher.cnic or '' }}"></div>
+            <div class="form-group"><label class="form-label">Blood Group</label><select name="blood_group" class="form-control"><option value="">Select</option>{% for bg in ['A+','A-','B+','B-','AB+','AB-','O+','O-'] %}<option value="{{ bg }}" {% if teacher.blood_group==bg %}selected{% endif %}>{{ bg }}</option>{% endfor %}</select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Address</label><textarea name="address" class="form-control" rows="2">{{ teacher.address or '' }}</textarea></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h5 class="card-title"><i class="bi bi-briefcase-fill"></i> Professional Details</h5></div>
+        <div class="card-body">
+          <div class="form-row cols-2">
+            <div class="form-group"><label class="form-label">Department</label><select name="department_id" class="form-control"><option value="">Select</option>{% for d in departments %}<option value="{{ d.id }}" {% if teacher.department_id==d.id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}</select></div>
+            <div class="form-group"><label class="form-label">Specialization</label><input type="text" name="specialization" class="form-control" value="{{ teacher.specialization or '' }}"></div>
+            <div class="form-group"><label class="form-label">Qualification</label><input type="text" name="qualification" class="form-control" value="{{ teacher.qualification or '' }}"></div>
+            <div class="form-group"><label class="form-label">Basic Salary (PKR)</label><input type="number" name="basic_salary" class="form-control currency-input" value="{{ teacher.basic_salary }}"></div>
+            <div class="form-group"><label class="form-label">Joining Date</label><input type="date" name="joining_date" class="form-control" value="{{ teacher.joining_date.isoformat() if teacher.joining_date else '' }}"></div>
+            <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px"><label class="toggle-switch"><input type="checkbox" name="is_active" class="toggle-input" {% if teacher.is_active %}checked{% endif %}><div class="toggle-track"><div class="toggle-thumb"></div></div><span class="toggle-label">Active Teacher</span></label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-header"><h5 class="card-title"><i class="bi bi-image-fill"></i> Photo</h5></div>
+        <div class="card-body" style="text-align:center">
+          <img id="photoPreview" src="{{ url_for('static', filename=teacher.photo) if teacher.photo else '' }}" style="{{ 'display:block' if teacher.photo else 'display:none' }};width:120px;height:120px;border-radius:50%;object-fit:cover;margin:0 auto 12px;border:3px solid var(--primary)">
+          <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()"><div class="photo-upload-icon"><i class="bi bi-camera-fill"></i></div><div class="photo-upload-text">{{ 'Change' if teacher.photo else 'Upload' }} Photo</div></div>
+          <input type="file" name="photo" id="photoInput" class="photo-upload-input" data-preview="photoPreview" accept="image/*" style="display:none">
+        </div>
+      </div>
+      <div class="card mt-4"><div class="card-body"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-lg"></i> Save Changes</button><a href="{{ url_for('teachers.view', id=teacher.id) }}" class="btn btn-light w-100 mt-2">Cancel</a></div></div>
+    </div>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Fee Payments{% endblock %}
+{% block page_title %}Fee Management{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group">
+      <h1 class="page-title">Fee Payments</h1>
+      <p class="page-subtitle">This month: <strong>{{ total_this_month | currency }}</strong> collected</p>
+    </div>
+    <div class="page-actions">
+      <a href="{{ url_for('fees.defaulters') }}" class="btn btn-outline-danger"><i class="bi bi-exclamation-circle-fill"></i> Defaulters</a>
+      <a href="{{ url_for('fees.structure') }}" class="btn btn-outline-secondary"><i class="bi bi-sliders"></i> Fee Structure</a>
+      <a href="{{ url_for('fees.collect') }}" class="btn btn-primary"><i class="bi bi-cash-coin"></i> Collect Fee</a>
+    </div>
+  </div>
+</div>
+<form method="GET" class="filter-bar">
+  <div class="form-group">
+    <label class="form-label">Search</label>
+    <div class="input-group">
+      <input type="text" name="q" class="form-control" placeholder="Receipt No, Student Name…" value="{{ q }}">
+      <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Class</label>
+    <select name="class_id" class="form-control" data-auto-submit>
+      <option value="">All Classes</option>
+      {% for cls in classes %}<option value="{{ cls.id }}" {% if class_id==cls.id %}selected{% endif %}>{{ cls.display_name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Month</label>
+    <input type="month" name="month" class="form-control" value="{{ month }}" onchange="this.form.submit()">
+  </div>
+</form>
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>Receipt</th><th>Student</th><th>Fee Type</th><th>Amount</th><th>Discount</th><th>Fine</th><th>Paid</th><th>Method</th><th>Date</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody>
+      {% for p in payments %}
+      <tr>
+        <td><code>{{ p.receipt_no }}</code></td>
+        <td>
+          <div class="avatar-info">
+            <div class="avatar-name">{{ p.student.full_name if p.student else '—' }}</div>
+            <div class="avatar-sub">{{ p.student.reg_no if p.student else '' }}</div>
+          </div>
+        </td>
+        <td>{{ p.fee_structure.name if p.fee_structure else '—' }}</td>
+        <td>{{ p.amount | currency }}</td>
+        <td class="text-success">{% if p.discount %}-{{ p.discount | currency }}{% else %}—{% endif %}</td>
+        <td class="text-danger">{% if p.fine %}+{{ p.fine | currency }}{% else %}—{% endif %}</td>
+        <td><strong>{{ p.paid_amount | currency }}</strong></td>
+        <td><span class="badge badge-light">{{ p.payment_method | title }}</span></td>
+        <td>{{ p.payment_date | date_fmt }}</td>
+        <td><span class="badge {{ 'badge-success' if p.status=='paid' else 'badge-warning' }}">{{ p.status | title }}</span></td>
+        <td>
+          <div class="table-actions">
+            <a href="{{ url_for('fees.receipt', id=p.id) }}" class="btn btn-xs btn-outline-secondary" title="View Receipt"><i class="bi bi-receipt"></i></a>
+            <a href="{{ url_for('fees.receipt_pdf', id=p.id) }}" class="btn btn-xs btn-light" title="Download PDF"><i class="bi bi-file-earmark-pdf-fill"></i></a>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="11"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-cash-coin"></i></div><div class="empty-state-title">No Payments Found</div><a href="{{ url_for('fees.collect') }}" class="btn btn-primary mt-3">Collect First Payment</a></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if pagination.pages > 1 %}
+  <div class="pagination-wrapper">
+    <div class="pagination-info">Page {{ pagination.page }} of {{ pagination.pages }}</div>
+    <div class="pagination">
+      {% for p in pagination.iter_pages() %}{% if p %}<a href="?page={{ p }}&q={{ q }}&class_id={{ class_id or '' }}&month={{ month }}" class="page-btn {% if p==pagination.page %}active{% endif %}">{{ p }}</a>{% else %}<span class="page-ellipsis">…</span>{% endif %}{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

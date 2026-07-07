@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Leave Applications{% endblock %}
+{% block page_title %}Leave Requests{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Leave Applications</h1><p class="page-subtitle">{{ pagination.total }} requests</p></div>
+    <div class="page-actions">
+      <a href="{{ url_for('attendance.apply_leave') }}" class="btn btn-primary"><i class="bi bi-file-earmark-plus-fill"></i> New Application</a>
+    </div>
+  </div>
+</div>
+<div class="filter-bar">
+  {% for s in ['pending','approved','rejected','all'] %}
+  <a href="?status={{ s }}" class="btn {{ 'btn-primary' if status==s else 'btn-light' }} btn-sm">{{ s | title }}</a>
+  {% endfor %}
+</div>
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>Applicant</th><th>Type</th><th>From</th><th>To</th><th>Reason</th><th>Status</th><th>Applied</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody>
+      {% for leave in applications %}
+      <tr>
+        <td>
+          <div class="avatar-info">
+            <div class="avatar-name">{% if leave.student %}{{ leave.student.full_name }}{% elif leave.teacher %}{{ leave.teacher.full_name }}{% else %}—{% endif %}</div>
+            <div class="avatar-sub">{% if leave.student %}Student • {{ leave.student.reg_no }}{% elif leave.teacher %}Teacher • {{ leave.teacher.employee_id }}{% endif %}</div>
+          </div>
+        </td>
+        <td><span class="badge badge-light">{{ leave.leave_type | title }}</span></td>
+        <td>{{ leave.start_date | date_fmt }}</td>
+        <td>{{ leave.end_date | date_fmt }}</td>
+        <td>{{ leave.reason | truncate_text(40) }}</td>
+        <td><span class="badge {{ {'pending':'badge-warning','approved':'badge-success','rejected':'badge-danger'}[leave.status] }}">{{ leave.status | title }}</span></td>
+        <td>{{ leave.created_at | time_ago }}</td>
+        <td>
+          {% if leave.status=='pending' and current_user.role in ('admin','principal','hod') %}
+          <div class="table-actions">
+            <form method="POST" action="{{ url_for('attendance.review_leave', id=leave.id) }}" style="display:inline">
+              <input type="hidden" name="action" value="approve">
+              <button type="submit" class="btn btn-xs btn-success" title="Approve"><i class="bi bi-check-lg"></i></button>
+            </form>
+            <form method="POST" action="{{ url_for('attendance.review_leave', id=leave.id) }}" style="display:inline">
+              <input type="hidden" name="action" value="reject">
+              <button type="submit" class="btn btn-xs btn-outline-danger" title="Reject"><i class="bi bi-x-lg"></i></button>
+            </form>
+          </div>
+          {% elif leave.review_note %}
+          <span class="text-muted fs-sm">{{ leave.review_note | truncate_text(30) }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-file-earmark-check"></i></div><div class="empty-state-title">No Leave Applications</div></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

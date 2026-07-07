@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Enter Marks — {{ exam.name }}{% endblock %}
+{% block page_title %}Enter Marks{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group">
+      <h1 class="page-title">Enter Marks — {{ exam.name }}</h1>
+      <p class="page-subtitle">Subject: {{ selected_subject.name if selected_subject else 'Select a subject' }}</p>
+    </div>
+    <div class="page-actions"><a href="{{ url_for('exams.view', id=exam.id) }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a></div>
+  </div>
+</div>
+<div class="filter-bar" style="margin-bottom:20px">
+  <div class="form-group">
+    <label class="form-label">Subject</label>
+    <select class="form-control" onchange="window.location='{{ url_for('exams.enter_marks', id=exam.id) }}?subject_id='+this.value">
+      <option value="">— Select Subject —</option>
+      {% for es in exam.subjects %}<option value="{{ es.subject_id }}" {% if selected_subject and es.subject_id==selected_subject.id %}selected{% endif %}>{{ es.subject.name }} (Total: {{ es.total_marks }})</option>{% endfor %}
+    </select>
+  </div>
+</div>
+{% if selected_subject and students %}
+<form method="POST" action="{{ url_for('exams.enter_marks', id=exam.id) }}?subject_id={{ selected_subject.id }}">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title"><i class="bi bi-pencil-square"></i> {{ selected_subject.name }} — {{ students|length }} Students</h5>
+      <div class="card-actions">
+        <span class="text-muted fs-sm">Max: {{ exam_subject.total_marks }} | Pass: {{ exam_subject.passing_marks }}</span>
+        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-save-fill"></i> Save Marks</button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <table class="table">
+        <thead><tr><th style="width:40px">#</th><th>Student</th><th style="width:160px">Marks Obtained</th><th style="width:100px">Out of</th><th>Grade</th><th>Remarks</th></tr></thead>
+        <tbody>
+          {% for s in students %}
+          {% set existing = marks_dict.get(s.id) %}
+          <tr>
+            <td class="text-muted">{{ s.roll_no or loop.index }}</td>
+            <td><div class="avatar-info"><div class="avatar-name">{{ s.full_name }}</div><div class="avatar-sub">{{ s.reg_no }}</div></div></td>
+            <td>
+              <input type="number" name="marks_{{ s.id }}" class="form-control"
+                     min="0" max="{{ exam_subject.total_marks }}" step="0.5"
+                     value="{{ existing.marks_obtained if existing else '' }}"
+                     placeholder="0–{{ exam_subject.total_marks }}"
+                     oninput="calcGrade(this, {{ exam_subject.total_marks }}, {{ exam_subject.passing_marks }}, 'grade_{{ s.id }}')">
+            </td>
+            <td class="text-muted">/ {{ exam_subject.total_marks }}</td>
+            <td><span id="grade_{{ s.id }}" class="badge badge-light">{{ existing.grade if existing else '—' }}</span></td>
+            <td><input type="text" name="remarks_{{ s.id }}" class="form-control" style="width:160px" value="{{ existing.remarks if existing else '' }}" placeholder="Optional…"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer"><button type="submit" class="btn btn-primary"><i class="bi bi-save-fill"></i> Save All Marks</button></div>
+  </div>
+</form>
+<script>
+function calcGrade(input, total, passing, gradeId) {
+  const marks = parseFloat(input.value);
+  const el = document.getElementById(gradeId);
+  if (isNaN(marks) || marks < 0) { el.textContent = '—'; el.className = 'badge badge-light'; return; }
+  const pct = (marks / total) * 100;
+  let grade, cls;
+  if (marks < passing)    { grade = 'F';  cls = 'badge-danger'; }
+  else if (pct >= 90)     { grade = 'A+'; cls = 'badge-success'; }
+  else if (pct >= 80)     { grade = 'A';  cls = 'badge-success'; }
+  else if (pct >= 70)     { grade = 'B+'; cls = 'badge-info'; }
+  else if (pct >= 60)     { grade = 'B';  cls = 'badge-info'; }
+  else if (pct >= 50)     { grade = 'C';  cls = 'badge-warning'; }
+  else                    { grade = 'D';  cls = 'badge-warning'; }
+  el.textContent = grade;
+  el.className = 'badge ' + cls;
+}
+</script>
+{% elif selected_subject %}
+<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-people"></i></div><div class="empty-state-title">No Students</div></div></div></div>
+{% else %}
+<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-arrow-up-circle"></i></div><div class="empty-state-title">Select a Subject</div><div class="empty-state-text">Choose a subject above to enter marks.</div></div></div></div>
+{% endif %}
+{% endblock %}

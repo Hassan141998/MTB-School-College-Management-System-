@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Edit Book{% endblock %}
+{% block page_title %}Edit Book{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Edit: {{ book.title | truncate_text(40) }}</h1></div>
+    <div class="page-actions"><a href="{{ url_for('library.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a></div>
+  </div>
+</div>
+<div style="max-width:640px">
+  <div class="card">
+    <div class="card-header"><h5 class="card-title"><i class="bi bi-book-fill"></i> Edit Book Details</h5></div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="form-row cols-2">
+          <div class="form-group" style="grid-column:span 2"><label class="form-label">Title <span class="required">*</span></label><input type="text" name="title" class="form-control" required value="{{ book.title }}"></div>
+          <div class="form-group"><label class="form-label">Author <span class="required">*</span></label><input type="text" name="author" class="form-control" required value="{{ book.author }}"></div>
+          <div class="form-group"><label class="form-label">ISBN</label><input type="text" name="isbn" class="form-control" value="{{ book.isbn or '' }}"></div>
+          <div class="form-group"><label class="form-label">Category</label><input type="text" name="category" class="form-control" value="{{ book.category or '' }}"></div>
+          <div class="form-group"><label class="form-label">Publisher</label><input type="text" name="publisher" class="form-control" value="{{ book.publisher or '' }}"></div>
+          <div class="form-group"><label class="form-label">Publication Year</label><input type="number" name="publication_year" class="form-control" value="{{ book.publication_year or '' }}"></div>
+          <div class="form-group"><label class="form-label">Total Copies</label><input type="number" name="total_copies" class="form-control" min="1" value="{{ book.total_copies }}"></div>
+          <div class="form-group"><label class="form-label">Shelf Location</label><input type="text" name="shelf_location" class="form-control" value="{{ book.shelf_location or '' }}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2">{{ book.description or '' }}</textarea></div>
+        <div class="form-group"><label class="toggle-switch"><input type="checkbox" name="is_active" class="toggle-input" {% if book.is_active %}checked{% endif %}><div class="toggle-track"><div class="toggle-thumb"></div></div><span class="toggle-label">Active</span></label></div>
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-lg"></i> Save Changes</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

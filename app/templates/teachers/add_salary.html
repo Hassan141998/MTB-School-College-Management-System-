@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Add Salary Record{% endblock %}
+{% block page_title %}Add Salary Record{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Add Salary — {{ teacher.full_name }}</h1></div>
+    <div class="page-actions"><a href="{{ url_for('teachers.salary', id=teacher.id) }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a></div>
+  </div>
+</div>
+<div style="max-width:600px">
+  <div class="card">
+    <div class="card-header"><h5 class="card-title"><i class="bi bi-cash-coin"></i> Salary Details</h5></div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="form-row cols-2">
+          <div class="form-group"><label class="form-label">Month <span class="required">*</span></label><input type="month" name="month" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Status</label><select name="status" class="form-control"><option value="pending">Pending</option><option value="paid">Paid</option></select></div>
+          <div class="form-group"><label class="form-label">Basic Salary (PKR)</label><input type="number" name="basic_salary" class="form-control currency-input" value="{{ teacher.basic_salary }}" min="0" step="100"></div>
+          <div class="form-group"><label class="form-label">Allowances (PKR)</label><input type="number" name="allowances" class="form-control currency-input" value="0" min="0" step="100"></div>
+          <div class="form-group"><label class="form-label">Deductions (PKR)</label><input type="number" name="deductions" class="form-control currency-input" value="0" min="0" step="100"></div>
+          <div class="form-group"><label class="form-label">Paid Date</label><input type="date" name="paid_date" class="form-control"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Remarks</label><textarea name="remarks" class="form-control" rows="2"></textarea></div>
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-lg"></i> Save Salary Record</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

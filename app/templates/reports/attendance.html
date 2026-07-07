@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Attendance Analysis{% endblock %}
+{% block page_title %}Attendance Analysis{% endblock %}
+{% block scripts %}
+{% if report_data %}
+<script>
+window.attendanceReportData = {
+  labels: {{ chart_labels | tojson }},
+  present: {{ chart_present | tojson }},
+  absent: {{ chart_absent | tojson }},
+  leave: {{ chart_leave | tojson }}
+};
+</script>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Attendance Analysis</h1></div>
+    <div class="page-actions">
+      <a href="{{ url_for('reports.attendance_excel') }}?month={{ month }}&class_id={{ class_id or '' }}" class="btn btn-light"><i class="bi bi-download"></i> Export Excel</a>
+      <a href="{{ url_for('reports.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+  </div>
+</div>
+<form method="GET" class="filter-bar">
+  <div class="form-group"><label class="form-label">Month</label><input type="month" name="month" class="form-control" value="{{ month }}" onchange="this.form.submit()"></div>
+  <div class="form-group"><label class="form-label">Class</label><select name="class_id" class="form-control" data-auto-submit><option value="">All Classes</option>{% for cls in classes %}<option value="{{ cls.id }}" {% if class_id==cls.id %}selected{% endif %}>{{ cls.display_name }}</option>{% endfor %}</select></div>
+</form>
+
+{% if report_data %}
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+  <div class="stat-card success" style="padding:16px"><div class="stat-icon" style="width:40px;height:40px;font-size:16px"><i class="bi bi-check-circle-fill"></i></div><div class="stat-body"><div class="stat-value" style="font-size:1.5rem">{{ summary.avg_pct }}%</div><div class="stat-label">Avg Attendance</div></div></div>
+  <div class="stat-card primary" style="padding:16px"><div class="stat-icon" style="width:40px;height:40px;font-size:16px"><i class="bi bi-person-check-fill"></i></div><div class="stat-body"><div class="stat-value" style="font-size:1.5rem">{{ summary.good_count }}</div><div class="stat-label">Above 75%</div></div></div>
+  <div class="stat-card danger" style="padding:16px"><div class="stat-icon" style="width:40px;height:40px;font-size:16px"><i class="bi bi-person-x-fill"></i></div><div class="stat-body"><div class="stat-value" style="font-size:1.5rem">{{ summary.low_count }}</div><div class="stat-label">Below 75%</div></div></div>
+  <div class="stat-card secondary" style="padding:16px"><div class="stat-icon" style="width:40px;height:40px;font-size:16px"><i class="bi bi-people-fill"></i></div><div class="stat-body"><div class="stat-value" style="font-size:1.5rem">{{ summary.total }}</div><div class="stat-label">Total Students</div></div></div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><h5 class="card-title"><i class="bi bi-bar-chart-fill"></i> Class-wise Breakdown</h5></div>
+  <div class="card-body"><div class="chart-container" style="height:260px"><canvas id="attendanceReportChart"></canvas></div></div>
+</div>
+
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>#</th><th>Student</th><th>Class</th><th>Present</th><th>Absent</th><th>Leave</th><th>Total</th><th>%</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for r in report_data %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td><div class="avatar-info"><div class="avatar-name">{{ r.student.full_name }}</div><div class="avatar-sub">{{ r.student.reg_no }}</div></div></td>
+        <td>{{ r.student.class_section.display_name if r.student.class_section else '—' }}</td>
+        <td><span class="badge badge-success">{{ r.present }}</span></td>
+        <td><span class="badge badge-danger">{{ r.absent }}</span></td>
+        <td><span class="badge badge-warning">{{ r.leave }}</span></td>
+        <td>{{ r.total }}</td>
+        <td>
+          <div class="progress-labeled">
+            <div class="progress" style="height:5px"><div class="progress-bar {{ 'success' if r.percentage>=75 else 'danger' }}" style="width:{{ r.percentage }}%"></div></div>
+            <span class="progress-val" style="min-width:40px">{{ r.percentage }}%</span>
+          </div>
+        </td>
+        <td><span class="badge {{ 'badge-success' if r.percentage>=75 else 'badge-danger' }}">{{ 'Good' if r.percentage>=75 else 'Low' }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-calendar-x"></i></div><div class="empty-state-title">No Attendance Data</div><div class="empty-state-text">No attendance records found for the selected period and class.</div></div></div></div>
+{% endif %}
+{% endblock %}

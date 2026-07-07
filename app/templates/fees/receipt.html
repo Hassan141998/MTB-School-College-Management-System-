@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ payment.receipt_no }}{% endblock %}
+{% block page_title %}Fee Receipt{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Receipt: {{ payment.receipt_no }}</h1></div>
+    <div class="page-actions">
+      <a href="{{ url_for('fees.receipt_pdf', id=payment.id) }}" class="btn btn-primary" target="_blank"><i class="bi bi-file-earmark-pdf-fill"></i> Download PDF</a>
+      <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer-fill"></i> Print</button>
+      <a href="{{ url_for('fees.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+  </div>
+</div>
+<div style="max-width:600px">
+  <div class="card">
+    <div class="card-body" style="padding:32px">
+      <div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid var(--primary)">
+        <div style="font-size:28px;font-weight:800;color:var(--primary)">MTB School & College</div>
+        <div style="font-size:13px;color:var(--text-muted)">Fee Payment Receipt</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px">
+        <div><span class="text-muted fs-sm">Receipt No</span><br><code style="font-size:15px">{{ payment.receipt_no }}</code></div>
+        <div style="text-align:right"><span class="text-muted fs-sm">Date</span><br><strong>{{ payment.payment_date | date_fmt }}</strong></div>
+      </div>
+      <div style="background:var(--primary-bg);border-radius:var(--radius);padding:16px;margin-bottom:20px">
+        <div class="text-muted fs-sm mb-2">Student Information</div>
+        <div style="font-size:16px;font-weight:700">{{ payment.student.full_name if payment.student else '—' }}</div>
+        <div style="font-size:13px;color:var(--text-muted)">
+          {{ payment.student.reg_no if payment.student else '' }} •
+          {{ payment.student.class_section.display_name if payment.student and payment.student.class_section else '' }}
+        </div>
+      </div>
+      <table class="table" style="font-size:13.5px">
+        <tbody>
+          <tr><td class="text-muted">Fee Type</td><td><strong>{{ payment.fee_structure.name if payment.fee_structure else '—' }}</strong></td></tr>
+          <tr><td class="text-muted">Total Amount</td><td>{{ payment.amount | currency }}</td></tr>
+          {% if payment.discount %}<tr><td class="text-muted">Discount</td><td class="text-success">- {{ payment.discount | currency }}</td></tr>{% endif %}
+          {% if payment.fine %}<tr><td class="text-muted">Fine</td><td class="text-danger">+ {{ payment.fine | currency }}</td></tr>{% endif %}
+          <tr><td class="text-muted">Payment Method</td><td><span class="badge badge-light">{{ payment.payment_method | replace('_',' ') | title }}</span></td></tr>
+          <tr><td class="text-muted">Status</td><td><span class="badge {{ 'badge-success' if payment.status=='paid' else 'badge-warning' }}">{{ payment.status | title }}</span></td></tr>
+        </tbody>
+      </table>
+      <div style="background:var(--primary);color:white;border-radius:var(--radius);padding:16px;text-align:center;margin-top:16px">
+        <div style="font-size:13px;opacity:.8">Total Paid</div>
+        <div style="font-size:28px;font-weight:800">{{ payment.paid_amount | currency }}</div>
+      </div>
+      {% if payment.remarks %}<p style="margin-top:16px;font-size:12.5px;color:var(--text-muted)">Note: {{ payment.remarks }}</p>{% endif %}
+      <div style="display:flex;justify-content:space-between;margin-top:40px;padding-top:20px;border-top:1px solid var(--border-light);font-size:12px;color:var(--text-muted)">
+        <div style="text-align:center"><div style="border-top:1px solid var(--text-muted);padding-top:8px;margin-top:40px;width:120px">Cashier Signature</div></div>
+        <div style="text-align:center"><div style="border-top:1px solid var(--text-muted);padding-top:8px;margin-top:40px;width:120px">School Stamp</div></div>
+      </div>
+      <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--text-muted)">Generated on {{ now().strftime('%d %b %Y %H:%M') if now else '' }} — Thank you for your payment!</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

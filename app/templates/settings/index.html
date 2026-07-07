@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">System Settings</h1><p class="page-subtitle">Manage school configuration</p></div>
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+  {% set sections = [
+    ('departments','Departments','bi-building-fill','Manage academic departments'),
+    ('subjects','Subjects','bi-book-fill','Curriculum & subject codes'),
+    ('classes','Class Sections','bi-people-fill','Class, section & room assignments'),
+    ('users','Users','bi-person-lock-fill','User accounts & role management'),
+    ('announcements','Announcements','bi-megaphone-fill','Post notices and announcements'),
+    ('calendar','Academic Calendar','bi-calendar-event-fill','Events, exams & holidays'),
+  ] %}
+  {% for endpoint, label, icon, desc in sections %}
+  <a href="{{ url_for('settings.' + endpoint) }}" class="card hover-lift" style="text-decoration:none">
+    <div class="card-body" style="padding:24px;text-align:center">
+      <div style="width:56px;height:56px;background:var(--primary-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px;color:var(--primary)"><i class="{{ icon }}"></i></div>
+      <h5 style="font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:6px">{{ label }}</h5>
+      <p style="font-size:12px;color:var(--text-muted);margin:0">{{ desc }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

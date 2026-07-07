@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Issued Books{% endblock %}
+{% block page_title %}Issued Books{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Issued Books</h1><p class="page-subtitle">{{ pagination.total }} active issues</p></div>
+    <div class="page-actions">
+      <a href="{{ url_for('library.issue') }}" class="btn btn-primary"><i class="bi bi-book-fill"></i> Issue Book</a>
+    </div>
+  </div>
+</div>
+<div class="filter-bar">
+  {% for s in ['all','active','overdue','returned'] %}
+  <a href="?status={{ s }}" class="btn {{ 'btn-primary' if status==s else 'btn-light' }} btn-sm">{{ s | title }}</a>
+  {% endfor %}
+</div>
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>#</th><th>Book</th><th>Borrower</th><th>Issued</th><th>Due</th><th>Returned</th><th>Fine</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody>
+      {% for issue in issues %}
+      <tr>
+        <td class="text-muted">{{ loop.index }}</td>
+        <td><div class="avatar-info"><div class="avatar-name">{{ issue.book.title | truncate_text(35) }}</div><div class="avatar-sub">{{ issue.book.author }}</div></div></td>
+        <td>
+          <div class="avatar-info">
+            {% if issue.student %}<div class="avatar-name">{{ issue.student.full_name }}</div><div class="avatar-sub">Student • {{ issue.student.reg_no }}</div>
+            {% elif issue.teacher %}<div class="avatar-name">{{ issue.teacher.full_name }}</div><div class="avatar-sub">Teacher • {{ issue.teacher.employee_id }}</div>{% endif %}
+          </div>
+        </td>
+        <td>{{ issue.issue_date | date_fmt }}</td>
+        <td>{{ issue.due_date | date_fmt }}</td>
+        <td>{{ issue.return_date | date_fmt if issue.return_date else '—' }}</td>
+        <td>{% if issue.fine > 0 %}<span class="text-danger">{{ issue.fine | currency }}</span>{% else %}—{% endif %}</td>
+        <td>
+          <span class="badge {{ {'active':'badge-info','overdue':'badge-danger','returned':'badge-success'}[issue.status] }}">
+            {{ issue.status | title }}{% if issue.status=='overdue' %} 🚨{% endif %}
+          </span>
+        </td>
+        <td>
+          <div class="table-actions">
+            {% if issue.status in ('active','overdue') %}
+            <form method="POST" action="{{ url_for('library.return_book', id=issue.id) }}" style="display:inline">
+              <button type="submit" class="btn btn-xs btn-success" title="Mark Returned"><i class="bi bi-arrow-return-left"></i> Return</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-book"></i></div><div class="empty-state-title">No Issues Found</div></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if pagination.pages > 1 %}
+  <div class="pagination-wrapper">
+    <div class="pagination-info">Page {{ pagination.page }} of {{ pagination.pages }}</div>
+    <div class="pagination">{% for p in pagination.iter_pages() %}{% if p %}<a href="?page={{ p }}&status={{ status }}" class="page-btn {% if p==pagination.page %}active{% endif %}">{{ p }}</a>{% else %}<span class="page-ellipsis">…</span>{% endif %}{% endfor %}</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

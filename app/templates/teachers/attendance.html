@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Teacher Attendance{% endblock %}
+{% block page_title %}Teacher Attendance{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Mark Teacher Attendance</h1><p class="page-subtitle">{{ att_date.strftime('%A, %d %B %Y') }}</p></div>
+    <div class="page-actions">
+      <input type="date" id="dateNav" value="{{ att_date.isoformat() }}" class="form-control" style="width:160px" onchange="window.location='?date='+this.value">
+      <button type="button" data-mark-all="present" class="btn btn-outline-secondary"><i class="bi bi-check-all"></i> All Present</button>
+    </div>
+  </div>
+</div>
+<form method="POST">
+  <div class="card">
+    <div class="card-header"><h5 class="card-title"><i class="bi bi-person-workspace"></i> {{ teachers|length }} Teachers</h5><button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-save-fill"></i> Save Attendance</button></div>
+    <div class="card-body p-0">
+      <table class="table">
+        <thead><tr><th>Teacher</th><th>Department</th><th>Status</th><th>Check In</th><th>Check Out</th></tr></thead>
+        <tbody>
+          {% for t in teachers %}
+          {% set rec = existing.get(t.id) %}
+          <tr class="{% if rec %}att-{{ rec.status }}{% endif %}">
+            <td><div class="table-avatar"><div class="avatar-circle" style="width:32px;height:32px;font-size:11px">{{ t.full_name | initials }}</div><div class="avatar-info"><div class="avatar-name">{{ t.full_name }}</div><div class="avatar-sub">{{ t.employee_id }}</div></div></div></td>
+            <td>{{ t.department.name if t.department else '—' }}</td>
+            <td>
+              <select name="status_{{ t.id }}" class="form-control att-status-select" style="width:130px">
+                {% for s in ['present','absent','late','leave'] %}
+                <option value="{{ s }}" {% if rec and rec.status==s %}selected{% elif not rec and s=='absent' %}selected{% endif %}>{{ s | title }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input type="time" name="checkin_{{ t.id }}" class="form-control" style="width:120px" value="{{ rec.check_in or '' }}"></td>
+            <td><input type="time" name="checkout_{{ t.id }}" class="form-control" style="width:120px" value="{{ rec.check_out or '' }}"></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer"><button type="submit" class="btn btn-primary"><i class="bi bi-save-fill"></i> Save Attendance</button></div>
+  </div>
+</form>
+<style>.att-present{background:rgba(40,167,69,.05)}.att-absent{background:rgba(220,53,69,.05)}.att-late{background:rgba(255,193,7,.05)}</style>
+{% endblock %}

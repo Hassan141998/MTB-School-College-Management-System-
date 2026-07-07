@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Edit Fee Structure{% endblock %}
+{% block page_title %}Edit Fee Type{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Edit: {{ fs.name }}</h1></div>
+    <div class="page-actions"><a href="{{ url_for('fees.structure') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a></div>
+  </div>
+</div>
+<div style="max-width:560px">
+  <div class="card">
+    <div class="card-header"><h5 class="card-title"><i class="bi bi-sliders"></i> Edit Fee Details</h5></div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="form-group"><label class="form-label">Name</label><input type="text" name="name" class="form-control" value="{{ fs.name }}" required></div>
+        <div class="form-row cols-2">
+          <div class="form-group"><label class="form-label">Fee Type</label><select name="fee_type" class="form-control">{% for t in ['monthly','quarterly','annual','one_time','transport','library','exam'] %}<option value="{{ t }}" {% if fs.fee_type==t %}selected{% endif %}>{{ t | replace('_',' ') | title }}</option>{% endfor %}</select></div>
+          <div class="form-group"><label class="form-label">Amount (PKR)</label><input type="number" name="amount" class="form-control" value="{{ fs.amount }}" min="1" step="10"></div>
+          <div class="form-group"><label class="form-label">Applicable Class</label><input type="text" name="class_name" class="form-control" value="{{ fs.class_name or '' }}"></div>
+          <div class="form-group"><label class="form-label">Due Day</label><input type="number" name="due_day" class="form-control" value="{{ fs.due_day }}" min="1" max="28"></div>
+        </div>
+        <div class="form-group"><label class="toggle-switch"><input type="checkbox" name="is_active" class="toggle-input" {% if fs.is_active %}checked{% endif %}><div class="toggle-track"><div class="toggle-thumb"></div></div><span class="toggle-label">Active</span></label></div>
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-lg"></i> Save Changes</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

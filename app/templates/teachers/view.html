@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{{ teacher.full_name }}{% endblock %}
+{% block page_title %}Teacher Profile{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group">
+      <h1 class="page-title">{{ teacher.full_name }}</h1>
+      <div class="breadcrumb">
+        <div class="breadcrumb-item"><a href="{{ url_for('teachers.index') }}">Teachers</a></div>
+        <span class="breadcrumb-sep"><i class="bi bi-chevron-right"></i></span>
+        <div class="breadcrumb-item active">{{ teacher.employee_id }}</div>
+      </div>
+    </div>
+    <div class="page-actions">
+      {% if current_user.role in ('admin','principal') %}
+      <a href="{{ url_for('teachers.edit', id=teacher.id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-fill"></i> Edit</a>
+      {% endif %}
+      {% if current_user.role in ('admin','accountant') %}
+      <a href="{{ url_for('teachers.add_salary', id=teacher.id) }}" class="btn btn-primary"><i class="bi bi-cash-coin"></i> Add Salary Record</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start">
+  <div class="card">
+    <div class="profile-card">
+      <div class="profile-avatar-lg">{% if teacher.photo %}<img src="{{ url_for('static', filename=teacher.photo) }}" alt="">{% else %}{{ teacher.full_name | initials }}{% endif %}</div>
+      <div class="profile-name">{{ teacher.full_name }}</div>
+      <div style="margin-top:6px">
+        <span class="badge badge-secondary">{{ teacher.department.name if teacher.department else '—' }}</span>
+        <span class="badge {{ 'badge-success' if teacher.is_active else 'badge-danger' }} ms-1">{{ 'Active' if teacher.is_active else 'Inactive' }}</span>
+      </div>
+      <div class="profile-stats">
+        <div class="profile-stat"><div class="profile-stat-val">{{ att_pct }}%</div><div class="profile-stat-lbl">Attendance</div></div>
+        <div class="profile-stat"><div class="profile-stat-val">{{ teacher.basic_salary | currency }}</div><div class="profile-stat-lbl">Basic Salary</div></div>
+      </div>
+    </div>
+    <div class="card-body" style="padding-top:0">
+      <ul class="detail-list">
+        <li><span class="detail-key"><i class="bi bi-hash"></i> Emp ID</span><span class="detail-val"><code>{{ teacher.employee_id }}</code></span></li>
+        <li><span class="detail-key"><i class="bi bi-telephone-fill"></i> Phone</span><span class="detail-val">{{ teacher.phone or '—' }}</span></li>
+        <li><span class="detail-key"><i class="bi bi-envelope-fill"></i> Email</span><span class="detail-val">{{ teacher.email or '—' }}</span></li>
+        <li><span class="detail-key"><i class="bi bi-mortarboard-fill"></i> Qualification</span><span class="detail-val">{{ teacher.qualification or '—' }}</span></li>
+        <li><span class="detail-key"><i class="bi bi-book-fill"></i> Specialization</span><span class="detail-val">{{ teacher.specialization or '—' }}</span></li>
+        <li><span class="detail-key"><i class="bi bi-calendar-fill"></i> Joined</span><span class="detail-val">{{ teacher.joining_date | date_fmt }}</span></li>
+        <li><span class="detail-key"><i class="bi bi-credit-card-fill"></i> CNIC</span><span class="detail-val">{{ teacher.cnic | mask_cnic if teacher.cnic else '—' }}</span></li>
+      </ul>
+    </div>
+  </div>
+  <div>
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="card-title"><i class="bi bi-calendar-check-fill"></i> Attendance This Month</h5></div>
+      <div class="card-body">
+        <div class="progress-labeled mb-3">
+          <div class="progress" style="height:10px"><div class="progress-bar {{ 'success' if att_pct>=75 else 'danger' }}" style="width:{{ att_pct }}%"></div></div>
+          <span class="progress-val">{{ att_pct }}%</span>
+        </div>
+        <div style="display:flex;gap:16px;font-size:13px">
+          <span class="badge-dot success">Present: {{ present }}</span>
+          <span class="badge-dot danger">Absent: {{ total_att - present }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="card-title"><i class="bi bi-cash-coin"></i> Salary Records</h5>
+        <a href="{{ url_for('teachers.salary', id=teacher.id) }}" class="btn btn-xs btn-light">View All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if salary_records %}
+        <table class="table" style="font-size:12.5px">
+          <thead><tr><th>Month</th><th>Basic</th><th>Allowances</th><th>Deductions</th><th>Net</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for s in salary_records %}
+            <tr>
+              <td>{{ s.month.strftime('%b %Y') }}</td>
+              <td>{{ s.basic_salary | currency }}</td>
+              <td>{{ s.allowances | currency }}</td>
+              <td>{{ s.deductions | currency }}</td>
+              <td><strong>{{ s.net_salary | currency }}</strong></td>
+              <td><span class="badge {{ 'badge-success' if s.status=='paid' else 'badge-warning' }}">{{ s.status | title }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state" style="padding:20px"><div class="empty-state-text">No salary records yet</div></div>
+        {% endif %}
+      </div>
+    </div>
+    {% if assigned_classes %}
+    <div class="card">
+      <div class="card-header"><h5 class="card-title"><i class="bi bi-house-door-fill"></i> Assigned Classes</h5></div>
+      <div class="card-body">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          {% for cls in assigned_classes %}<span class="badge badge-secondary">{{ cls.display_name }}</span>{% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

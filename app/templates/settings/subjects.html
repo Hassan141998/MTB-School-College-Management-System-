@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Subjects{% endblock %}
+{% block page_title %}Subjects{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Subjects</h1><p class="page-subtitle">{{ subjects|length }} subjects</p></div>
+    <div class="page-actions"><a href="{{ url_for('settings.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a><button class="btn btn-primary" data-modal="addSubjectModal"><i class="bi bi-plus-lg"></i> Add Subject</button></div>
+  </div>
+</div>
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>#</th><th>Name</th><th>Code</th><th>Department</th><th>Credits</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody>
+      {% for s in subjects %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td><strong>{{ s.name }}</strong></td>
+        <td><code>{{ s.code }}</code></td>
+        <td>{{ s.department.name if s.department else '—' }}</td>
+        <td>{{ s.credits or '—' }}</td>
+        <td><div class="table-actions">
+          <button class="btn btn-xs btn-outline-primary" onclick="editSubject({{ s.id }},'{{ s.name }}','{{ s.code }}',{{ s.department_id or 'null' }},{{ s.credits or 0 }})"><i class="bi bi-pencil-fill"></i></button>
+          <form method="POST" action="{{ url_for('settings.delete_subject', id=s.id) }}" style="display:inline"><button type="submit" class="btn btn-xs btn-outline-danger" data-confirm="Delete {{ s.name }}?"><i class="bi bi-trash-fill"></i></button></form>
+        </div></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-book"></i></div><div class="empty-state-title">No Subjects</div></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="modal-backdrop" id="addSubjectModal">
+  <div class="modal-box">
+    <div class="modal-header"><h5 class="modal-title" id="subjectModalTitle">Add Subject</h5><button class="modal-close" data-modal-close>&times;</button></div>
+    <form method="POST" action="{{ url_for('settings.add_subject') }}" id="subjectForm">
+      <input type="hidden" name="subject_id" id="subjectId">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Name <span class="required">*</span></label><input type="text" name="name" id="subjectName" class="form-control" required></div>
+        <div class="form-row cols-2">
+          <div class="form-group"><label class="form-label">Code <span class="required">*</span></label><input type="text" name="code" id="subjectCode" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Credits</label><input type="number" name="credits" id="subjectCredits" class="form-control" min="1" max="10"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Department</label><select name="department_id" id="subjectDept" class="form-control"><option value="">None</option>{% for d in departments %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-light" data-modal-close>Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+    </form>
+  </div>
+</div>
+<script>
+function editSubject(id,name,code,deptId,credits){
+  document.getElementById('subjectId').value=id;
+  document.getElementById('subjectName').value=name;
+  document.getElementById('subjectCode').value=code;
+  document.getElementById('subjectDept').value=deptId||'';;
+  document.getElementById('subjectCredits').value=credits||'';;
+  document.getElementById('subjectModalTitle').textContent='Edit Subject';
+  document.getElementById('subjectForm').action='/settings/subjects/'+id+'/edit';
+  MTB.Modal.open('addSubjectModal');
+}
+</script>
+{% endblock %}

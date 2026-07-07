@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ exam.name }}{% endblock %}
+{% block page_title %}Exam Detail{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">{{ exam.name }}</h1><div class="breadcrumb"><div class="breadcrumb-item"><a href="{{ url_for('exams.index') }}">Exams</a></div><span class="breadcrumb-sep"><i class="bi bi-chevron-right"></i></span><div class="breadcrumb-item active">{{ exam.name }}</div></div></div>
+    <div class="page-actions">
+      <span class="badge {{ {"upcoming":"badge-info","ongoing":"badge-warning","completed":"badge-success"}[exam.status] }} p-2" style="font-size:13px">{{ exam.status | title }}</span>
+      <a href="{{ url_for('exams.enter_marks', id=exam.id) }}" class="btn btn-primary"><i class="bi bi-pencil-fill"></i> Enter Marks</a>
+    </div>
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px">
+  <div>
+    <!-- Add subject -->
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="card-title"><i class="bi bi-plus-circle-fill"></i> Add Subject to Exam</h5></div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('exams.add_subject', id=exam.id) }}">
+          <div class="form-row cols-3">
+            <div class="form-group"><label class="form-label">Subject</label><select name="subject_id" class="form-control" required><option value="">Select</option>{% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>
+            <div class="form-group"><label class="form-label">Exam Date</label><input type="date" name="exam_date" class="form-control"></div>
+            <div class="form-group"><label class="form-label">Exam Time</label><input type="time" name="exam_time" class="form-control"></div>
+            <div class="form-group"><label class="form-label">Total Marks</label><input type="number" name="total_marks" class="form-control" value="{{ exam.total_marks }}"></div>
+            <div class="form-group"><label class="form-label">Passing Marks</label><input type="number" name="passing_marks" class="form-control" value="{{ exam.passing_marks }}"></div>
+            <div class="form-group" style="display:flex;align-items:flex-end"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i> Add</button></div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Subjects list -->
+    <div class="card">
+      <div class="card-header"><h5 class="card-title"><i class="bi bi-journal-text"></i> Exam Subjects ({{ exam.exam_subjects|length }})</h5></div>
+      <div class="card-body p-0">
+        {% if exam.exam_subjects %}
+        <table class="table" style="font-size:13px">
+          <thead><tr><th>Subject</th><th>Date</th><th>Time</th><th>Total Marks</th><th>Passing</th></tr></thead>
+          <tbody>
+            {% for es in exam.exam_subjects %}
+            <tr>
+              <td><strong>{{ es.subject.name }}</strong></td>
+              <td>{{ es.exam_date | date_fmt if es.exam_date else "—" }}</td>
+              <td>{{ es.exam_time or "—" }}</td>
+              <td>{{ es.total_marks }}</td>
+              <td>{{ es.passing_marks }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state" style="padding:24px"><div class="empty-state-icon"><i class="bi bi-plus-circle"></i></div><div class="empty-state-title">No Subjects Added</div><div class="empty-state-text">Add subjects to this exam above.</div></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <!-- Info card -->
+  <div class="card" style="align-self:start">
+    <div class="card-header"><h5 class="card-title"><i class="bi bi-info-circle-fill"></i> Exam Info</h5></div>
+    <div class="card-body">
+      <ul class="detail-list">
+        <li><span class="detail-key">Type</span><span class="detail-val"><span class="badge badge-light">{{ exam.exam_type | title }}</span></span></li>
+        <li><span class="detail-key">Class</span><span class="detail-val">{{ exam.class_name or "All" }}</span></li>
+        <li><span class="detail-key">Academic Year</span><span class="detail-val">{{ exam.academic_year or "—" }}</span></li>
+        <li><span class="detail-key">Start Date</span><span class="detail-val">{{ exam.start_date | date_fmt }}</span></li>
+        <li><span class="detail-key">End Date</span><span class="detail-val">{{ exam.end_date | date_fmt }}</span></li>
+        <li><span class="detail-key">Total Marks</span><span class="detail-val">{{ exam.total_marks }}</span></li>
+        <li><span class="detail-key">Passing Marks</span><span class="detail-val">{{ exam.passing_marks }}</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

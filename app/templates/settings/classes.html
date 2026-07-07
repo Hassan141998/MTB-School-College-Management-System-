@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Class Sections{% endblock %}
+{% block page_title %}Class Sections{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Class Sections</h1><p class="page-subtitle">{{ classes|length }} sections</p></div>
+    <div class="page-actions"><a href="{{ url_for('settings.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a><button class="btn btn-primary" data-modal="addClassModal"><i class="bi bi-plus-lg"></i> Add Section</button></div>
+  </div>
+</div>
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>#</th><th>Class Name</th><th>Section</th><th>Room</th><th>Capacity</th><th>Enrolled</th><th>Class Teacher</th><th style="text-align:right">Actions</th></tr></thead>
+    <tbody>
+      {% for cls in classes %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td><strong>{{ cls.class_name }}</strong></td>
+        <td><span class="badge badge-secondary">{{ cls.section }}</span></td>
+        <td>{{ cls.room_no or '—' }}</td>
+        <td>{{ cls.capacity or '—' }}</td>
+        <td>{{ cls.students|length }}</td>
+        <td>{{ cls.class_teacher.full_name if cls.class_teacher else '—' }}</td>
+        <td><div class="table-actions">
+          <button class="btn btn-xs btn-outline-primary" onclick="editClass({{ cls.id }},'{{ cls.class_name }}','{{ cls.section }}','{{ cls.room_no or '' }}',{{ cls.capacity or 0 }},{{ cls.class_teacher_id or 'null' }})"><i class="bi bi-pencil-fill"></i></button>
+          <form method="POST" action="{{ url_for('settings.delete_class', id=cls.id) }}" style="display:inline"><button type="submit" class="btn btn-xs btn-outline-danger" data-confirm="Delete {{ cls.display_name }}?"><i class="bi bi-trash-fill"></i></button></form>
+        </div></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-people"></i></div><div class="empty-state-title">No Classes</div></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="modal-backdrop" id="addClassModal">
+  <div class="modal-box">
+    <div class="modal-header"><h5 class="modal-title" id="classModalTitle">Add Section</h5><button class="modal-close" data-modal-close>&times;</button></div>
+    <form method="POST" action="{{ url_for('settings.add_class') }}" id="classForm">
+      <input type="hidden" name="class_id" id="classId">
+      <div class="modal-body">
+        <div class="form-row cols-2">
+          <div class="form-group"><label class="form-label">Class Name <span class="required">*</span></label><input type="text" name="class_name" id="className" class="form-control" required placeholder="e.g. Class 9, Grade 11"></div>
+          <div class="form-group"><label class="form-label">Section <span class="required">*</span></label><input type="text" name="section" id="classSection" class="form-control" required placeholder="A, B, C…"></div>
+          <div class="form-group"><label class="form-label">Room No</label><input type="text" name="room_no" id="classRoom" class="form-control" placeholder="e.g. 101"></div>
+          <div class="form-group"><label class="form-label">Capacity</label><input type="number" name="capacity" id="classCapacity" class="form-control" min="1"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Class Teacher</label><select name="class_teacher_id" id="classTeacher" class="form-control"><option value="">None</option>{% for t in teachers %}<option value="{{ t.id }}">{{ t.full_name }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-light" data-modal-close>Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+    </form>
+  </div>
+</div>
+<script>
+function editClass(id,name,section,room,capacity,teacherId){
+  document.getElementById('classId').value=id;
+  document.getElementById('className').value=name;
+  document.getElementById('classSection').value=section;
+  document.getElementById('classRoom').value=room;
+  document.getElementById('classCapacity').value=capacity||'';;
+  document.getElementById('classTeacher').value=teacherId||'';;
+  document.getElementById('classModalTitle').textContent='Edit Section';
+  document.getElementById('classForm').action='/settings/classes/'+id+'/edit';
+  MTB.Modal.open('addClassModal');
+}
+</script>
+{% endblock %}

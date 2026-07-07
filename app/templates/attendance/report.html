@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Attendance Report{% endblock %}
+{% block page_title %}Attendance Report{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-top">
+    <div class="page-title-group"><h1 class="page-title">Attendance Report</h1><p class="page-subtitle">{{ start | date_fmt }} — {{ end | date_fmt }}</p></div>
+    <div class="page-actions"><a href="{{ url_for('attendance.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> Back</a></div>
+  </div>
+</div>
+<form method="GET" class="filter-bar">
+  <div class="form-group"><label class="form-label">Month</label><input type="month" name="month" class="form-control" value="{{ month_str }}" onchange="this.form.submit()"></div>
+  <div class="form-group"><label class="form-label">Class</label><select name="class_id" class="form-control" data-auto-submit><option value="">All Classes</option>{% for cls in classes %}<option value="{{ cls.id }}" {% if class_id==cls.id %}selected{% endif %}>{{ cls.display_name }}</option>{% endfor %}</select></div>
+</form>
+{% if report_data %}
+<div class="table-wrapper">
+  <table class="table table-striped">
+    <thead><tr><th>#</th><th>Student</th><th>Present</th><th>Absent</th><th>Leave</th><th>Total Days</th><th>Attendance %</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for row in report_data %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td><div class="avatar-info"><div class="avatar-name">{{ row.student.full_name }}</div><div class="avatar-sub">{{ row.student.reg_no }}</div></div></td>
+        <td><span class="badge badge-success">{{ row.present }}</span></td>
+        <td><span class="badge badge-danger">{{ row.absent }}</span></td>
+        <td><span class="badge badge-warning">{{ row.leave }}</span></td>
+        <td>{{ row.total }}</td>
+        <td>
+          <div class="progress-labeled">
+            <div class="progress" style="height:6px"><div class="progress-bar {{ 'success' if row.percentage>=75 else 'danger' }}" style="width:{{ row.percentage }}%"></div></div>
+            <span class="progress-val" style="min-width:42px">{{ row.percentage }}%</span>
+          </div>
+        </td>
+        <td><span class="badge {{ 'badge-success' if row.percentage>=75 else 'badge-danger' }}">{{ 'Good' if row.percentage>=75 else 'Low' }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card"><div class="card-body"><div class="empty-state"><div class="empty-state-icon"><i class="bi bi-bar-chart"></i></div><div class="empty-state-title">Select a Class</div><div class="empty-state-text">Choose a class to view the attendance report.</div></div></div></div>
+{% endif %}
+{% endblock %}
