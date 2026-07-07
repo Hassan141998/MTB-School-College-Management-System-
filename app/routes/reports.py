@@ -14,7 +14,12 @@ reports_bp = Blueprint('reports', __name__, template_folder='../templates')
 @reports_bp.route('/')
 @login_required
 def index():
-    return render_template('reports/index.html')
+    # reports/index.html expects a 'performance_data' list for its top-10
+    # preview table. We don't have that template's exact expected row
+    # shape, so this is a safe empty-list stopgap to stop the crash rather
+    # than guessing field names - send reports/index.html to populate it
+    # with real top-performer data.
+    return render_template('reports/index.html', performance_data=[])
 
 
 @reports_bp.route('/students')

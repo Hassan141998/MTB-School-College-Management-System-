@@ -5,10 +5,23 @@ from app.models import FeePayment, FeeStructure, Student, ClassSection
 from app.utils.helpers import generate_receipt_no, paginate_query
 from app.utils.decorators import role_required
 from app import db
-from datetime import date
+from datetime import date, datetime
 import io
 
 fees_bp = Blueprint('fees', __name__, template_folder='../templates')
+
+
+def parse_date(value, default=None):
+    """Parse a 'YYYY-MM-DD' string from a form field into a real Python
+    date object - SQLite's Date column rejects plain strings."""
+    if isinstance(value, date):
+        return value
+    if not value:
+        return default if default is not None else date.today()
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return default if default is not None else date.today()
 
 
 @fees_bp.route('/')
@@ -98,7 +111,7 @@ def record_payment():
             discount=discount,
             fine=fine,
             total_paid=amount - discount + fine,
-            payment_date=request.form.get('payment_date') or date.today(),
+            payment_date=parse_date(request.form.get('payment_date'), default=date.today()),
             month=request.form.get('month'),
             year=int(request.form.get('year', date.today().year)),
             payment_method=request.form.get('payment_method', 'cash'),
@@ -155,4 +168,5 @@ def defaulters():
     defaulter_list = query.order_by(Student.full_name).all()
     return render_template('fees/defaulters.html', defaulters=defaulter_list,
                            classes=classes, class_id=class_id,
-                           current_month=date.today().strftime('%B %Y'))
+                           current_month=date.today().strftime('%B %Y'),
+                           today=date.today())

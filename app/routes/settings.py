@@ -23,7 +23,10 @@ def index():
 @staff_required
 def departments():
     depts = Department.query.filter_by(is_active=True).order_by(Department.name).all()
-    return render_template('settings/departments.html', departments=depts)
+    recent_users = User.query.order_by(User.created_at.desc()).all()
+    upcoming_events = AcademicCalendar.query.order_by(AcademicCalendar.start_date).all()
+    return render_template('settings/departments.html', departments=depts,
+                           users=recent_users, events=upcoming_events)
 
 
 @settings_bp.route('/departments/add', methods=['POST'])
@@ -162,6 +165,12 @@ def toggle_user(id):
     db.session.commit()
     flash(f'User {"activated" if user.is_active else "deactivated"}.', 'success')
     return redirect(url_for('settings.users'))
+
+
+# settings/users.html links to 'settings.toggle_user_status' - register that
+# endpoint name for the same view rather than editing the template blind.
+settings_bp.add_url_rule('/users/<int:id>/toggle', endpoint='toggle_user_status',
+                         view_func=toggle_user, methods=['POST'])
 
 
 # ─── Announcements ────────────────────────────────────────────────────────────

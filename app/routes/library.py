@@ -60,6 +60,31 @@ def add_book():
     return render_template('library/add_book.html')
 
 
+@library_bp.route('/books/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'librarian', 'principal')
+def edit_book(id):
+    book = LibraryBook.query.get_or_404(id)
+    if request.method == 'POST':
+        old_total = book.total_copies
+        new_total = int(request.form.get('total_copies', old_total) or old_total)
+        # Keep available_copies in sync when total_copies changes.
+        book.available_copies = max(0, book.available_copies + (new_total - old_total))
+        book.isbn = request.form.get('isbn')
+        book.title = request.form.get('title')
+        book.author = request.form.get('author')
+        book.publisher = request.form.get('publisher')
+        book.category = request.form.get('category')
+        book.edition = request.form.get('edition')
+        book.total_copies = new_total
+        book.price = float(request.form.get('price', 0) or 0)
+        book.location = request.form.get('location')
+        db.session.commit()
+        flash(f'Book "{book.title}" updated.', 'success')
+        return redirect(url_for('library.books'))
+    return render_template('library/edit_book.html', book=book)
+
+
 @library_bp.route('/books/<int:id>/delete', methods=['POST'])
 @login_required
 @role_required('admin', 'librarian')
@@ -124,7 +149,7 @@ def issue_book():
         flash(f'Book issued. Due date: {due_date.strftime("%d %b %Y")}', 'success')
         return redirect(url_for('library.issues'))
 
-    return render_template('library/issue_book.html', books=books, students=students,
+    return render_template('library/issue.html', books=books, students=students,
                            today=date.today())
 
 
