@@ -86,13 +86,27 @@ def mark_api():
 
     results = engine.recognize_faces(image_b64)
     marked = []
+    detections = []  # every detected face, known or not - for drawing boxes
     today = date.today()
 
     for r in results:
+        loc = r['location']
+        if not r['known']:
+            detections.append({
+                'location': loc, 'known': False, 'name': 'Unknown',
+                'class_name': '', 'confidence': 0,
+            })
+            continue
+
         sid = r['student_id']
         student = Student.query.get(sid)
         if not student:
+            detections.append({
+                'location': loc, 'known': False, 'name': 'Unknown',
+                'class_name': '', 'confidence': 0,
+            })
             continue
+
         existing = Attendance.query.filter_by(student_id=sid, date=today).first()
         if not existing:
             att = Attendance(
@@ -106,9 +120,16 @@ def mark_api():
             )
             db.session.add(att)
             marked.append({'name': student.full_name, 'confidence': r['confidence'],
-                           'reg_no': student.reg_no})
+                           'reg_no': student.reg_no,
+                           'class_name': student.class_section.display_name if student.class_section else '—'})
+        detections.append({
+            'location': loc, 'known': True, 'name': student.full_name,
+            'class_name': student.class_section.display_name if student.class_section else '—',
+            'confidence': r['confidence'],
+        })
     db.session.commit()
-    return jsonify({'success': True, 'marked': marked, 'recognized': len(results)})
+    return jsonify({'success': True, 'marked': marked, 'recognized': len(results),
+                    'detections': detections})
 
 
 @face_bp.route('/live')
@@ -139,10 +160,25 @@ def live_frame():
     response_results = []
 
     for r in results:
+        loc = r['location']
+        if not r['known']:
+            response_results.append({
+                'name': 'Unknown', 'reg_no': '', 'class_name': '',
+                'confidence': 0, 'already_marked': False, 'known': False,
+                'location': loc,
+            })
+            continue
+
         sid = r['student_id']
         student = Student.query.get(sid)
         if not student:
+            response_results.append({
+                'name': 'Unknown', 'reg_no': '', 'class_name': '',
+                'confidence': 0, 'already_marked': False, 'known': False,
+                'location': loc,
+            })
             continue
+
         existing = Attendance.query.filter_by(student_id=sid, date=today).first()
         already_marked = existing is not None
         if not already_marked:
@@ -159,8 +195,11 @@ def live_frame():
         response_results.append({
             'name': student.full_name,
             'reg_no': student.reg_no,
+            'class_name': student.class_section.display_name if student.class_section else '—',
             'confidence': r['confidence'],
             'already_marked': already_marked,
+            'known': True,
+            'location': loc,
         })
 
     db.session.commit()

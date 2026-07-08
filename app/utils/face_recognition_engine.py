@@ -18,11 +18,15 @@ except ImportError:
 
 
 class FaceRecognitionEngine:
-    def __init__(self, encodings_dir):
+    def __init__(self, encodings_dir, tolerance=None):
         self.encodings_dir = encodings_dir
         os.makedirs(encodings_dir, exist_ok=True)
         self.known_encodings = []
         self.known_ids = []
+        # Was previously hardcoded to an equivalent of distance<=0.5
+        # regardless of this setting - now actually honors it.
+        self.tolerance = float(tolerance if tolerance is not None
+                              else os.environ.get('FACE_RECOGNITION_TOLERANCE', 0.6))
         self._load_all_encodings()
 
     def _encoding_path(self, student_id):
@@ -94,12 +98,20 @@ class FaceRecognitionEngine:
 
     def recognize_faces(self, image_b64):
         """
-        Recognize faces in a base64 image.
-        Returns list of dicts: [{student_id, confidence, name}]
+        Detect and recognize faces in a base64 image.
+        Returns a list of dicts, ONE PER DETECTED FACE (known or unknown):
+            {
+                'location': {'top', 'right', 'bottom', 'left'},  # pixel box
+                'known': bool,
+                'student_id': int or None,
+                'confidence': float (0 if unknown),
+            }
+        Previously this silently dropped any face that didn't confidently
+        match a known encoding (and returned nothing at all if no faces were
+        registered yet) - so the UI could never show "face detected but
+        unknown". Now every detected face is reported.
         """
         if not FACE_RECOGNITION_AVAILABLE:
-            return []
-        if not self.known_encodings:
             return []
 
         img = self._b64_to_image(image_b64)
@@ -112,19 +124,28 @@ class FaceRecognitionEngine:
 
         face_encs = face_recognition.face_encodings(img, face_locs)
         results = []
-        for enc in face_encs:
-            distances = face_recognition.face_distance(self.known_encodings, enc)
-            if len(distances) == 0:
-                continue
-            best_idx = int(distances.argmin())
-            best_dist = distances[best_idx]
-            confidence = round((1 - best_dist) * 100, 1)
-            if confidence >= 50:
-                results.append({
-                    'student_id': self.known_ids[best_idx],
-                    'confidence': confidence,
-                    'distance': float(best_dist)
-                })
+        for loc, enc in zip(face_locs, face_encs):
+            top, right, bottom, left = loc
+            entry = {
+                'location': {'top': top, 'right': right, 'bottom': bottom, 'left': left},
+                'known': False,
+                'student_id': None,
+                'confidence': 0,
+            }
+            if self.known_encodings:
+                distances = face_recognition.face_distance(self.known_encodings, enc)
+                if len(distances):
+                    best_idx = int(distances.argmin())
+                    best_dist = distances[best_idx]
+                    confidence = round((1 - best_dist) * 100, 1)
+                    if best_dist <= self.tolerance:
+                        entry.update({
+                            'known': True,
+                            'student_id': self.known_ids[best_idx],
+                            'confidence': confidence,
+                            'distance': float(best_dist),
+                        })
+            results.append(entry)
         return results
 
     def process_live_frame(self, frame_b64):

@@ -74,7 +74,7 @@
           <tbody>
             {% for s in salary_records %}
             <tr>
-              <td>{{ s.month.strftime('%b %Y') }}</td>
+              <td>{{ s.month }} {{ s.year }}</td>
               <td>{{ s.basic_salary | currency }}</td>
               <td>{{ s.allowances | currency }}</td>
               <td>{{ s.deductions | currency }}</td>

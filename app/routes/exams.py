@@ -5,9 +5,22 @@ from app.models import Exam, ExamSubject, Mark, Student, ClassSection, Subject
 from app.utils.decorators import staff_required
 from app.utils.helpers import calculate_grade_from_marks, paginate_query
 from app import db
-from datetime import date
+from datetime import date, datetime
 
 exams_bp = Blueprint('exams', __name__, template_folder='../templates')
+
+
+def parse_date(value, default=None):
+    """Parse a 'YYYY-MM-DD' form string into a real Python date object -
+    SQLite's Date column rejects plain strings."""
+    if isinstance(value, date):
+        return value
+    if not value:
+        return default
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return default
 
 
 @exams_bp.route('/')
@@ -28,8 +41,8 @@ def add_exam():
             name=request.form.get('name'),
             exam_type=request.form.get('exam_type', 'mid-term'),
             class_section_id=request.form.get('class_section_id') or None,
-            start_date=request.form.get('start_date') or None,
-            end_date=request.form.get('end_date') or None,
+            start_date=parse_date(request.form.get('start_date')),
+            end_date=parse_date(request.form.get('end_date')),
             academic_year=request.form.get('academic_year', '2024-25'),
         )
         db.session.add(exam)
@@ -57,7 +70,7 @@ def exam_subjects(exam_id):
                 subject_id=subject_id,
                 total_marks=total_marks,
                 passing_marks=passing_marks,
-                exam_date=request.form.get('exam_date') or None,
+                exam_date=parse_date(request.form.get('exam_date')),
                 exam_time=request.form.get('exam_time'),
             )
             db.session.add(es)

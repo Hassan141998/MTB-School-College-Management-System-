@@ -8,6 +8,52 @@ import os
 import sys
 
 
+def generate_avatar(name, out_path, size=300):
+    """Generate a simple initials-on-colored-circle avatar (like Gmail/Slack
+    use for users without a photo). No real people involved, works offline -
+    this is deliberately NOT a real photo, since using a real person's
+    likeness for a fictional student/teacher record isn't appropriate."""
+    from PIL import Image, ImageDraw, ImageFont
+    import hashlib
+
+    colors = ['#FF6B35', '#004E89', '#2E7D32', '#6A4C93', '#1976D2',
+              '#C2185B', '#F57C00', '#00796B', '#5D4037', '#455A64']
+    idx = int(hashlib.md5(name.encode()).hexdigest(), 16) % len(colors)
+    bg = colors[idx]
+
+    parts = name.replace('Mr.', '').replace('Ms.', '').replace('Dr.', '').replace('Prof.', '').split()
+    initials = ''.join(p[0].upper() for p in parts[:2]) if parts else '?'
+
+    img = Image.new('RGB', (size, size), bg)
+    draw = ImageDraw.Draw(img)
+
+    font = None
+    for candidate in (
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',  # Linux
+        'C:\\Windows\\Fonts\\arialbd.ttf',                        # Windows
+        'C:\\Windows\\Fonts\\Arial Bold.ttf',
+        '/Library/Fonts/Arial Bold.ttf',                          # macOS
+    ):
+        try:
+            font = ImageFont.truetype(candidate, size // 2)
+            break
+        except (OSError, IOError):
+            continue
+    if font is None:
+        try:
+            font = ImageFont.load_default(size=size // 2)  # Pillow >= 10.1
+        except TypeError:
+            font = ImageFont.load_default()
+
+    bbox = draw.textbbox((0, 0), initials, font=font)
+    w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    draw.text(((size - w) / 2 - bbox[0], (size - h) / 2 - bbox[1]),
+              initials, fill='white', font=font)
+
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    img.convert('RGB').save(out_path, 'JPEG', quality=88)
+
+
 def main():
     # ── Delete old database files ──────────────────────────────────────────
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -104,8 +150,18 @@ def main():
                 cs = ClassSection(class_name=cls, section=sec, max_students=40)
                 db.session.add(cs)
                 sections[f'{cls}-{sec}'] = cs
+        # ADP (Associate Degree Programme): semesters 1-4.
+        # BS (completion): semesters 5-8, continuing from ADP.
+        for sem in ('1', '2', '3', '4'):
+            cs = ClassSection(class_name='ADP', section=sem, max_students=40)
+            db.session.add(cs)
+            sections[f'ADP-{sem}'] = cs
+        for sem in ('5', '6', '7', '8'):
+            cs = ClassSection(class_name='BS', section=sem, max_students=40)
+            db.session.add(cs)
+            sections[f'BS-{sem}'] = cs
         db.session.flush()
-        print("   8 class sections created")
+        print("   16 class sections created (8 school + 4 ADP + 4 BS)")
 
         # ── Teachers ─────────────────────────────────────────────────────
         # FIX: Teacher's column is `join_date`, not `joining_date`.
@@ -117,12 +173,19 @@ def main():
             ('Mr. Tariq Hussain',  'tariq@mtbschool.edu.pk',    'HUM',  'English Literature', '0302-3456789', 38000),
             ('Ms. Rukhsana Begum', 'rukhsana@mtbschool.edu.pk', 'SCI',  'Chemistry',          '0303-4567890', 44000),
             ('Mr. Zubair Ahmed',   'zubair@mtbschool.edu.pk',   'CS',   'Computer Science',   '0304-5678901', 48000),
+            ('Dr. Nadia Farooq',   'nadia@mtbschool.edu.pk',    'CS',   'Software Engineering', '0305-6789012', 52000),
+            ('Mr. Kashif Raza',    'kashif@mtbschool.edu.pk',   'COM',  'Accounting',         '0306-7890123', 40000),
+            ('Ms. Hina Aslam',     'hina@mtbschool.edu.pk',     'MATH', 'Statistics',         '0307-8901234', 41000),
         ]
+        upload_dir = os.path.join(BASE_DIR, 'app', 'static', 'uploads', 'teachers')
         for i, (name, email, dept_code, spec, phone, salary) in enumerate(teachers_raw):
-            t = Teacher(employee_id=f'EMP-{i+1:04d}', full_name=name, email=email,
+            emp_id = f'EMP-{i+1:04d}'
+            photo_rel = f'uploads/teachers/{emp_id}.jpg'
+            generate_avatar(name, os.path.join(upload_dir, f'{emp_id}.jpg'))
+            t = Teacher(employee_id=emp_id, full_name=name, email=email,
                         phone=phone, department_id=depts[dept_code].id,
                         specialization=spec, join_date=date(year - 2, 1, 15),
-                        status='active')
+                        status='active', photo=photo_rel)
             db.session.add(t)
             db.session.flush()
             # FIX: SalaryRecord.month is a String, not a date; `year` is
@@ -135,7 +198,7 @@ def main():
                 basic_salary=salary, allowances=salary * 0.1,
                 deductions=salary * 0.05, net_salary=salary * 1.05,
                 payment_date=date.today(), status='paid'))
-        print(f"   {len(teachers_raw)} teachers created")
+        print(f"   {len(teachers_raw)} teachers created (with generated avatars)")
 
         # ── Students ─────────────────────────────────────────────────────
         # FIX: Student has no `is_active` column — it uses `status` (string).
@@ -148,15 +211,30 @@ def main():
             ('Zainab Hussain',     'female', '11-A', 'Hussain Baksh',    '0305-4321098', date(2007, 9, 12)),
             ('Usman Ghani',        'male',   '11-B', 'Ghani ur Rehman',  '0306-3210987', date(2007, 2, 28)),
             ('Sara Nawaz',         'female', '12-A', 'Nawaz Sharif Ali', '0307-2109876', date(2006, 6, 8)),
+            # ADP (semesters 1-4)
+            ('Bilal Aslam',        'male',   'ADP-1', 'Aslam Pervaiz',    '0311-1112223', date(2004, 4, 12)),
+            ('Mahnoor Iqbal',      'female', 'ADP-2', 'Iqbal Hussain',    '0312-2223334', date(2004, 8, 2)),
+            ('Danish Raza',        'male',   'ADP-3', 'Raza Muhammad',    '0313-3334445', date(2003, 12, 19)),
+            ('Kiran Shahzadi',     'female', 'ADP-4', 'Shahzad Iqbal',    '0314-4445556', date(2003, 6, 25)),
+            # BS (semesters 5-8, continuing from ADP)
+            ('Waqas Ahmed',        'male',   'BS-5',  'Ahmed Nawaz',      '0315-5556667', date(2003, 2, 14)),
+            ('Areeba Khan',        'female', 'BS-6',  'Khan Zaman',       '0316-6667778', date(2002, 10, 30)),
+            ('Talha Farooq',       'male',   'BS-7',  'Farooq Ahmed',     '0317-7778889', date(2002, 5, 9)),
+            ('Rimsha Bibi',        'female', 'BS-8',  'Bibi Rehman',      '0318-8889990', date(2002, 1, 22)),
         ]
+        student_upload_dir = os.path.join(BASE_DIR, 'app', 'static', 'uploads', 'students')
         for i, (name, gender, section, father, phone, dob) in enumerate(students_raw):
+            reg_no = f'MTB-{year}-{i+1:04d}'
+            photo_rel = f'uploads/students/{reg_no}.jpg'
+            generate_avatar(name, os.path.join(student_upload_dir, f'{reg_no}.jpg'))
             db.session.add(Student(
-                reg_no=f'MTB-{year}-{i+1:04d}', full_name=name, gender=gender,
+                reg_no=reg_no, full_name=name, gender=gender,
                 date_of_birth=dob, father_name=father, phone=phone,
                 class_section_id=sections[section].id,
                 admission_date=date(year - 1, 4, 1),
-                status='active', blood_group='O+', address='Karachi, Pakistan'))
-        print(f"   {len(students_raw)} students created")
+                status='active', blood_group='O+', address='Karachi, Pakistan',
+                photo=photo_rel))
+        print(f"   {len(students_raw)} students created (with generated avatars)")
 
         # ── Fee Structures ───────────────────────────────────────────────
         for cls, amount in (('9', 3500), ('10', 4000), ('11', 4500), ('12', 5000)):

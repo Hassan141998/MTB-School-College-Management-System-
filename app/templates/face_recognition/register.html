@@ -56,12 +56,14 @@
                 </div>
             </div>
             <div class="camera-footer">
-                <button class="btn btn-primary" id="start-camera-btn"
-                    onclick="this.parentElement.querySelector('#camera-video').style.display='block';document.getElementById('face-guide').style.display='block';document.getElementById('scan-line').style.display='block'">▶
-                    Start Camera</button>
+                <button class="btn btn-primary" id="start-camera-btn">▶ Start Camera</button>
                 <button class="btn btn-outline" id="stop-camera-btn" style="display:none">⏹ Stop</button>
                 <button class="btn btn-accent" id="capture-btn" disabled>📸 Capture (<span
                         id="sample-count">0</span>/5)</button>
+                <label class="btn btn-outline" for="upload-photo-input" style="cursor:pointer;margin-bottom:0">
+                    📁 Upload Photo(s) Instead
+                </label>
+                <input type="file" id="upload-photo-input" accept="image/*" multiple style="display:none">
             </div>
         </div>
 

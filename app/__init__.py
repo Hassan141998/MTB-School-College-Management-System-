@@ -112,4 +112,54 @@ def create_app(config_name='default'):
             "</div>"
         ), 500
 
+    @app.template_filter('currency')
+    def currency_filter(value):
+        try:
+            return f"PKR {float(value):,.0f}"
+        except (TypeError, ValueError):
+            return "PKR 0"
+
+    @app.template_filter('initials')
+    def initials_filter(name):
+        if not name:
+            return '?'
+        parts = str(name).split()
+        return ''.join(p[0].upper() for p in parts[:2]) if parts else '?'
+
+    @app.template_filter('date_fmt')
+    def date_fmt_filter(value, fmt='%d %b %Y'):
+        if not value:
+            return '—'
+        if hasattr(value, 'strftime'):
+            return value.strftime(fmt)
+        # Handle plain ISO date strings too.
+        try:
+            from datetime import datetime as _dt
+            return _dt.strptime(str(value), '%Y-%m-%d').strftime(fmt)
+        except (ValueError, TypeError):
+            return str(value)
+
+    @app.template_filter('percentage')
+    def percentage_filter(value, decimals=1):
+        try:
+            return f"{float(value):.{decimals}f}%"
+        except (TypeError, ValueError):
+            return "0%"
+
+    @app.template_filter('truncate_text')
+    def truncate_text_filter(text, length=50):
+        if not text:
+            return ''
+        text = str(text)
+        return text if len(text) <= length else text[:length].rstrip() + '…'
+
+    @app.template_filter('grade_color')
+    def grade_color_filter(grade):
+        colors = {
+            'A+': 'success', 'A': 'success',
+            'B': 'primary', 'C': 'warning',
+            'D': 'warning', 'F': 'danger',
+        }
+        return colors.get(str(grade).upper(), 'secondary')
+
     return app

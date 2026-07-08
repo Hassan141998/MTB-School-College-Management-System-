@@ -59,6 +59,40 @@ class FaceRecognitionApp {
         return this.canvas.toDataURL('image/jpeg', 0.85);
     }
 
+    // Draws a bounding box + name/class label around every detected face.
+    // Must be called AFTER captureFrame() (which draws the still frame the
+    // face locations correspond to) - draws directly on top of that same
+    // canvas so box coordinates line up pixel-for-pixel with what the
+    // server analyzed.
+    drawDetections(detections) {
+        if (!this.ctx || !detections || !detections.length) return;
+        detections.forEach(d => {
+            const loc = d.location;
+            if (!loc) return;
+            const { top, right, bottom, left } = loc;
+            const w = right - left;
+            const h = bottom - top;
+            const color = d.known ? '#22C55E' : '#EF4444';
+            const label = d.known
+                ? `${d.name}${d.class_name ? ' · ' + d.class_name : ''}${d.confidence ? ' (' + d.confidence + '%)' : ''}`
+                : 'Unknown';
+
+            this.ctx.strokeStyle = color;
+            this.ctx.lineWidth = 3;
+            this.ctx.strokeRect(left, top, w, h);
+
+            this.ctx.font = 'bold 16px sans-serif';
+            const textWidth = this.ctx.measureText(label).width;
+            const labelHeight = 24;
+            const labelY = top - labelHeight >= 0 ? top - labelHeight : bottom;
+
+            this.ctx.fillStyle = color;
+            this.ctx.fillRect(left, labelY, Math.max(w, textWidth + 12), labelHeight);
+            this.ctx.fillStyle = '#fff';
+            this.ctx.fillText(label, left + 6, labelY + labelHeight - 7);
+        });
+    }
+
     updateStatus(state, text) {
         const dot = document.querySelector('.status-dot');
         const label = document.querySelector('.camera-status span');
@@ -73,14 +107,14 @@ class FaceRecognitionApp {
 
     // ─── REGISTER MODE ─────────────────────────────────
 
-    async captureSample() {
-        if (!this.isRunning) return;
+    async captureSample(providedFrame) {
+        if (!providedFrame && !this.isRunning) return;
         if (this.samples.length >= this.maxSamples) {
             this.showError('Maximum 5 samples already captured.');
             return;
         }
 
-        const frame = this.captureFrame();
+        const frame = providedFrame || this.captureFrame();
         if (!frame) return;
 
         const idx = this.samples.length;
@@ -171,26 +205,29 @@ class FaceRecognitionApp {
             const data = await res.json();
             this.updateStatus('active', 'Camera Active');
 
-            const results = data.marked || [];
+            const detections = data.detections || [];
+            this.drawDetections(detections);
+
             const list = document.getElementById('recognition-results');
             if (list) {
-                if (results.length === 0) {
-                    list.innerHTML = '<div class="empty-state" style="padding:24px"><div class="empty-state-icon">🔍</div><div>No faces recognized</div></div>';
+                if (detections.length === 0) {
+                    list.innerHTML = '<div class="empty-state" style="padding:24px"><div class="empty-state-icon">🔍</div><div>No faces detected</div></div>';
                 } else {
-                    list.innerHTML = results.map(r => `
-            <div class="live-result-item">
-              <div class="cell-avatar">${r.name.charAt(0)}</div>
+                    list.innerHTML = detections.map(d => `
+            <div class="live-result-item ${d.known ? '' : 'unknown'}">
+              <div class="cell-avatar">${d.known ? d.name.charAt(0) : '?'}</div>
               <div>
-                <div class="live-result-name">${r.name}</div>
-                <div class="live-result-meta">${r.reg_no} — Marked Present ✓</div>
+                <div class="live-result-name">${d.known ? d.name : 'Unknown face'}</div>
+                <div class="live-result-meta">${d.known ? (d.class_name + ' — Marked Present ✓') : 'Not registered'}</div>
               </div>
-              <div class="live-result-conf">${r.confidence}%</div>
+              <div class="live-result-conf">${d.known ? d.confidence + '%' : ''}</div>
             </div>
           `).join('');
                 }
             }
-            if (results.length > 0 && window.showToast) {
-                window.showToast(`${results.length} student(s) marked present.`, 'success');
+            const markedList = data.marked || [];
+            if (markedList.length > 0 && window.showToast) {
+                window.showToast(`${markedList.length} student(s) marked present.`, 'success');
             }
         } catch (err) {
             this.updateStatus('active', 'Camera Active');
@@ -227,28 +264,59 @@ class FaceRecognitionApp {
             });
             const data = await res.json();
             const results = data.results || [];
-            const list = document.getElementById('live-results');
-            if (list && results.length > 0) {
-                results.forEach(r => {
-                    if (!r.already_marked) {
+            this.drawDetections(results.map(r => ({
+                location: r.location, known: r.known, name: r.name,
+                class_name: r.class_name, confidence: r.confidence,
+            })));
+            // NOTE: live.html's actual container id is 'live-results-container'
+            // (not 'live-results' - that id doesn't exist on this page, which
+            // is why detections never appeared before).
+            const list = document.getElementById('live-results-container');
+
+            if (results.length > 0) {
+                document.getElementById('live-empty-state')?.remove();
+
+                // Show the most recent face's name + class on top of the
+                // video feed for a few seconds.
+                const latest = results[0];
+                const overlay = document.getElementById('live-face-overlay');
+                if (overlay) {
+                    document.getElementById('live-face-overlay-name').textContent = latest.name;
+                    document.getElementById('live-face-overlay-class').textContent = latest.class_name || '';
+                    overlay.style.display = 'block';
+                    overlay.style.opacity = '1';
+                    clearTimeout(this._overlayTimeout);
+                    this._overlayTimeout = setTimeout(() => {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => { overlay.style.display = 'none'; }, 300);
+                    }, 3000);
+                }
+
+                if (list) {
+                    results.forEach(r => {
                         const item = document.createElement('div');
-                        item.className = 'live-result-item';
+                        item.className = `live-detection-item ${r.known ? 'known' : 'unknown'}`;
                         item.innerHTML = `
-              <div class="cell-avatar">${r.name.charAt(0)}</div>
-              <div>
+              <div class="cell-avatar">${r.known ? r.name.charAt(0) : '?'}</div>
+              <div style="flex:1">
                 <div class="live-result-name">${r.name}</div>
-                <div class="live-result-meta">${r.reg_no} — ${new Date().toLocaleTimeString()}</div>
+                <div class="live-result-meta">${r.reg_no} · ${r.class_name || ''} — ${new Date().toLocaleTimeString()}</div>
               </div>
               <div class="live-result-conf">${r.confidence}%</div>
             `;
                         list.prepend(item);
-                        if (window.showToast) window.showToast(`${r.name} marked present (${r.confidence}%)`, 'success', 2500);
+                    });
+                    if (window.showToast) {
+                        const newlyMarked = results.filter(r => r.known && !r.already_marked);
+                        if (newlyMarked.length) {
+                            window.showToast(`${newlyMarked.map(r => r.name).join(', ')} marked present`, 'success', 2500);
+                        }
                     }
-                });
+                }
             }
             // Update counter
             const counter = document.getElementById('marked-count');
-            if (counter) counter.textContent = parseInt(counter.textContent || 0) + results.filter(r => !r.already_marked).length;
+            if (counter) counter.textContent = parseInt(counter.textContent || 0) + results.filter(r => r.known && !r.already_marked).length;
         } catch (err) {
             // silently fail for live frames
         }
@@ -275,6 +343,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 startBtn.style.display = 'none';
                 if (stopBtn) stopBtn.style.display = 'inline-flex';
                 document.querySelector('.camera-placeholder')?.remove();
+                // Reveal the actual video feed + overlays here (fixes the
+                // black-screen bug). register.html's old inline onclick
+                // tried to find #camera-video inside the button's own
+                // parent (.camera-footer), but the video actually lives in
+                // a sibling div (.camera-feed-wrapper), so it always
+                // silently failed and the video stayed hidden forever.
+                if (app.video) app.video.style.display = 'block';
+                const faceGuide = document.getElementById('face-guide');
+                if (faceGuide) faceGuide.style.display = 'block';
+                const scanLine = document.getElementById('scan-line');
+                if (scanLine) scanLine.style.display = 'block';
                 if (mode === 'live') {
                     setTimeout(() => app.startLive(), 1000);
                 }
@@ -302,4 +381,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Recognize button (mark mode)
     document.getElementById('recognize-btn')?.addEventListener('click', () => app.recognizeFace());
+
+    // Upload-photo alternative to webcam capture (register mode).
+    // Reuses captureSample()'s existing thumbnail/progress logic by
+    // passing it an already-captured frame instead of grabbing one from
+    // the video feed.
+    const uploadInput = document.getElementById('upload-photo-input');
+    if (uploadInput) {
+        uploadInput.addEventListener('change', () => {
+            const files = Array.from(uploadInput.files || []);
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = (e) => app.captureSample(e.target.result);
+                reader.readAsDataURL(file);
+            });
+            uploadInput.value = '';
+        });
+    }
 });

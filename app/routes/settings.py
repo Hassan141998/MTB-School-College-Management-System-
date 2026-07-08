@@ -4,9 +4,22 @@ from app.models import (Department, Subject, User, ClassSection,
                          Announcement, AcademicCalendar)
 from app.utils.decorators import admin_required, staff_required
 from app import db
-from datetime import date
+from datetime import date, datetime
 
 settings_bp = Blueprint('settings', __name__, template_folder='../templates')
+
+
+def parse_date(value, default=None):
+    """Parse a 'YYYY-MM-DD' form string into a real Python date object -
+    SQLite's Date column rejects plain strings."""
+    if isinstance(value, date):
+        return value
+    if not value:
+        return default
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return default
 
 
 @settings_bp.route('/')
@@ -168,7 +181,7 @@ def toggle_user(id):
 
 
 # settings/users.html links to 'settings.toggle_user_status' - register that
-# endpoint name for the same view rather than editing the template blind.
+# endpoint name for the same view.
 settings_bp.add_url_rule('/users/<int:id>/toggle', endpoint='toggle_user_status',
                          view_func=toggle_user, methods=['POST'])
 
@@ -228,8 +241,8 @@ def add_calendar_event():
     event = AcademicCalendar(
         title=request.form.get('title'),
         event_type=request.form.get('event_type', 'event'),
-        start_date=request.form.get('start_date'),
-        end_date=request.form.get('end_date') or None,
+        start_date=parse_date(request.form.get('start_date')),
+        end_date=parse_date(request.form.get('end_date')),
         description=request.form.get('description'),
         is_holiday=request.form.get('is_holiday') == 'on',
         created_by=current_user.full_name,

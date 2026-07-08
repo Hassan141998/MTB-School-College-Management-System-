@@ -87,29 +87,44 @@ def mark():
 @attendance_bp.route('/report')
 @login_required
 def report():
-    student_id = request.args.get('student_id')
-    from_date_str = request.args.get('from_date', (date.today() - timedelta(days=30)).isoformat())
-    to_date_str = request.args.get('to_date', date.today().isoformat())
-    from_date_obj = parse_date(from_date_str)
-    to_date_obj = parse_date(to_date_str)
     classes = ClassSection.query.filter_by(is_active=True).all()
-    class_id = request.args.get('class_id')
+    class_id = request.args.get('class_id', type=int)
 
-    query = Attendance.query
-    if student_id:
-        query = query.filter_by(student_id=int(student_id))
+    today = date.today()
+    month_str = request.args.get('month', today.strftime('%Y-%m'))
+    try:
+        year, month = map(int, month_str.split('-'))
+        start = date(year, month, 1)
+    except (ValueError, TypeError):
+        start = today.replace(day=1)
+        month_str = start.strftime('%Y-%m')
+    if start.month == 12:
+        end = date(start.year, 12, 31)
+    else:
+        end = date(start.year, start.month + 1, 1) - timedelta(days=1)
+
+    report_data = []
     if class_id:
-        query = query.filter_by(class_section_id=int(class_id))
-    if from_date_str:
-        query = query.filter(Attendance.date >= from_date_obj)
-    if to_date_str:
-        query = query.filter(Attendance.date <= to_date_obj)
+        students = Student.query.filter_by(
+            class_section_id=class_id, status='active').order_by(Student.full_name).all()
+        for s in students:
+            recs = Attendance.query.filter(
+                Attendance.student_id == s.id,
+                Attendance.date >= start, Attendance.date <= end
+            ).all()
+            present = sum(1 for r in recs if r.status == 'present')
+            absent = sum(1 for r in recs if r.status == 'absent')
+            leave = sum(1 for r in recs if r.status == 'leave')
+            total = len(recs)
+            percentage = round((present / total * 100) if total else 0, 1)
+            report_data.append({
+                'student': s, 'present': present, 'absent': absent,
+                'leave': leave, 'total': total, 'percentage': percentage,
+            })
 
-    records = query.order_by(Attendance.date.desc()).limit(200).all()
-    students = Student.query.filter_by(status='active').order_by(Student.full_name).all()
-    return render_template('attendance/report.html', records=records, classes=classes,
-                           students=students, from_date=from_date_str, to_date=to_date_str,
-                           class_id=class_id, student_id=student_id)
+    return render_template('attendance/report.html', report_data=report_data,
+                           classes=classes, class_id=class_id,
+                           start=start, end=end, month_str=month_str)
 
 
 @attendance_bp.route('/leave', methods=['GET', 'POST'])

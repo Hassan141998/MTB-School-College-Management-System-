@@ -6,11 +6,24 @@ from app.models import Teacher, Department, SalaryRecord, TeacherAttendance
 from app.utils.helpers import generate_employee_id, paginate_query
 from app.utils.decorators import staff_required, admin_required
 from app import db
-from datetime import date
+from datetime import date, datetime
 
 teachers_bp = Blueprint('teachers', __name__, template_folder='../templates')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+
+def parse_date(value, default=None):
+    """Parse a 'YYYY-MM-DD' form string into a real Python date object -
+    SQLite's Date column rejects plain strings."""
+    if isinstance(value, date):
+        return value
+    if not value:
+        return default if default is not None else date.today()
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return default if default is not None else date.today()
 
 
 def allowed_file(filename):
@@ -60,7 +73,7 @@ def add_teacher():
             department_id=request.form.get('department_id') or None,
             designation=request.form.get('designation', 'Teacher'),
             basic_salary=float(request.form.get('basic_salary', 0) or 0),
-            join_date=request.form.get('join_date') or date.today(),
+            join_date=parse_date(request.form.get('join_date'), default=date.today()),
         )
         photo = request.files.get('photo')
         if photo and allowed_file(photo.filename):
@@ -86,8 +99,13 @@ def view_teacher(id):
         SalaryRecord.year.desc(), SalaryRecord.id.desc()).limit(6).all()
     recent_att = TeacherAttendance.query.filter_by(teacher_id=id).order_by(
         TeacherAttendance.date.desc()).limit(10).all()
+    total_att = TeacherAttendance.query.filter_by(teacher_id=id).count()
+    present_att = TeacherAttendance.query.filter_by(teacher_id=id, status='present').count()
+    att_pct = round((present_att / total_att * 100) if total_att else 0, 1)
     return render_template('teachers/view.html', teacher=teacher,
-                           salary_records=salary_records, recent_att=recent_att)
+                           salary_records=salary_records, recent_att=recent_att,
+                           att_pct=att_pct, total_att=total_att, present_att=present_att,
+                           present=present_att)
 
 
 @teachers_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
@@ -152,7 +170,7 @@ def salary_records(id):
             allowances=allow,
             deductions=deduct,
             net_salary=basic + allow - deduct,
-            payment_date=request.form.get('payment_date') or date.today(),
+            payment_date=parse_date(request.form.get('payment_date'), default=date.today()),
             payment_method=request.form.get('payment_method', 'cash'),
             status='paid',
             notes=request.form.get('notes'),
@@ -175,7 +193,7 @@ def mark_attendance():
     teachers = Teacher.query.filter_by(status='active').all()
     today = date.today()
     if request.method == 'POST':
-        att_date = request.form.get('att_date', today.isoformat())
+        att_date = parse_date(request.form.get('att_date'), default=today)
         marked = 0
         for teacher in teachers:
             status = request.form.get(f'status_{teacher.id}', 'absent')
@@ -201,7 +219,24 @@ def mark_attendance():
         flash(f'Attendance marked for {marked} teachers.', 'success')
         return redirect(url_for('teachers.mark_attendance'))
 
-    att_date = request.args.get('date', today.isoformat())
+    att_date_str = request.args.get('date', today.isoformat())
+    att_date = parse_date(att_date_str, default=today)
     existing_att = {a.teacher_id: a for a in TeacherAttendance.query.filter_by(date=att_date).all()}
     return render_template('teachers/attendance.html', teachers=teachers,
-                           today=today, att_date=att_date, existing_att=existing_att)
+                           today=today, att_date=att_date, existing=existing_att)
+
+
+# teachers/edit.html links to 'teachers.view' - register that endpoint
+# name for the same view.
+teachers_bp.add_url_rule('/<int:id>', endpoint='view', view_func=view_teacher)
+
+# teachers/view.html links to 'teachers.index'; teachers/salary.html (or
+# similar) links to 'teachers.add_salary' with an id - same naming
+# mismatch pattern, same underlying views.
+teachers_bp.add_url_rule('/', endpoint='index', view_func=list_teachers)
+teachers_bp.add_url_rule('/<int:id>/salary', endpoint='add_salary',
+                         view_func=salary_records, methods=['GET', 'POST'])
+teachers_bp.add_url_rule('/<int:id>/edit', endpoint='edit',
+                         view_func=edit_teacher, methods=['GET', 'POST'])
+teachers_bp.add_url_rule('/<int:id>/salary', endpoint='salary',
+                         view_func=salary_records, methods=['GET', 'POST'])

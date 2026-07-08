@@ -68,7 +68,6 @@ def edit_book(id):
     if request.method == 'POST':
         old_total = book.total_copies
         new_total = int(request.form.get('total_copies', old_total) or old_total)
-        # Keep available_copies in sync when total_copies changes.
         book.available_copies = max(0, book.available_copies + (new_total - old_total))
         book.isbn = request.form.get('isbn')
         book.title = request.form.get('title')
@@ -112,7 +111,7 @@ def issues():
             issue._current_fine = (today - issue.due_date).days * FINE_PER_DAY
         else:
             issue._current_fine = 0
-    return render_template('library/issues.html', issues=pagination.items,
+    return render_template('library/issued_list.html', issues=pagination.items,
                            pagination=pagination, status=status, today=today)
 
 
@@ -150,7 +149,7 @@ def issue_book():
         return redirect(url_for('library.issues'))
 
     return render_template('library/issue.html', books=books, students=students,
-                           today=date.today())
+                           today=date.today(), default_due=date.today() + timedelta(days=LOAN_DAYS))
 
 
 @library_bp.route('/return/<int:issue_id>', methods=['POST'])
@@ -175,3 +174,8 @@ def return_book(issue_id):
     else:
         flash('Book returned successfully.', 'success')
     return redirect(url_for('library.issues'))
+
+# library/issued_list.html links to 'library.issue' - register that
+# endpoint name for the same view.
+library_bp.add_url_rule('/issue', endpoint='issue', view_func=issue_book,
+                        methods=['GET', 'POST'])

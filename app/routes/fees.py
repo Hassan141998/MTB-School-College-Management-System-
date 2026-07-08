@@ -152,11 +152,14 @@ def defaulters():
     """Students with unpaid fees"""
     classes = ClassSection.query.filter_by(is_active=True).all()
     class_id = request.args.get('class_id', '')
+    today = date.today()
+    month = request.args.get('month', today.strftime('%B'))
+    year = request.args.get('year', str(today.year))
 
     paid_ids = db.session.query(FeePayment.student_id).filter(
-        FeePayment.month == date.today().strftime('%B'),
-        FeePayment.year == date.today().year
-    ).subquery()
+        FeePayment.month == month,
+        FeePayment.year == int(year)
+    ).scalar_subquery()
 
     query = Student.query.filter(
         Student.status == 'active',
@@ -165,8 +168,20 @@ def defaulters():
     if class_id:
         query = query.filter_by(class_section_id=int(class_id))
 
-    defaulter_list = query.order_by(Student.full_name).all()
-    return render_template('fees/defaulters.html', defaulters=defaulter_list,
+    defaulter_students = query.order_by(Student.full_name).all()
+
+    # Estimate expected fee: each defaulter's class's monthly tuition fee.
+    tuition_by_class = {
+        fs.class_name: fs.amount
+        for fs in FeeStructure.query.filter_by(fee_type='tuition', is_active=True).all()
+    }
+    defaulters = [
+        (s, tuition_by_class.get(s.class_section.class_name, 0) if s.class_section else 0)
+        for s in defaulter_students
+    ]
+    total_pending = sum(expected for _, expected in defaulters)
+
+    return render_template('fees/defaulters.html', defaulters=defaulters,
                            classes=classes, class_id=class_id,
-                           current_month=date.today().strftime('%B %Y'),
-                           today=date.today())
+                           month=month, year=year, today=today,
+                           total_pending=total_pending)

@@ -6,12 +6,25 @@ from app.models import Student, ClassSection, FeePayment, Attendance
 from app.utils.helpers import generate_reg_no, paginate_query
 from app.utils.decorators import staff_required
 from app import db
-from datetime import date
+from datetime import date, datetime
 import io
 
 students_bp = Blueprint('students', __name__, template_folder='../templates')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+
+def parse_date(value, default=None):
+    """Parse a 'YYYY-MM-DD' form string into a real Python date object -
+    SQLite's Date column rejects plain strings."""
+    if isinstance(value, date):
+        return value
+    if not value:
+        return default
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return default
 
 
 def allowed_file(filename):
@@ -56,7 +69,7 @@ def add_student():
             full_name=request.form.get('full_name'),
             father_name=request.form.get('father_name'),
             mother_name=request.form.get('mother_name'),
-            date_of_birth=request.form.get('date_of_birth') or None,
+            date_of_birth=parse_date(request.form.get('date_of_birth')),
             gender=request.form.get('gender'),
             phone=request.form.get('phone'),
             parent_phone=request.form.get('parent_phone'),
@@ -67,7 +80,7 @@ def add_student():
             blood_group=request.form.get('blood_group'),
             religion=request.form.get('religion'),
             class_section_id=request.form.get('class_section_id') or None,
-            admission_date=request.form.get('admission_date') or date.today(),
+            admission_date=parse_date(request.form.get('admission_date'), default=date.today()),
         )
         # Handle photo upload
         photo = request.files.get('photo')
