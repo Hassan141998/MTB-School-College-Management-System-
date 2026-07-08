@@ -26,8 +26,9 @@ def create_app(config_name='default'):
         db_url = db_url.strip('"').strip("'")
         if db_url.startswith('postgres://'):
             db_url = db_url.replace('postgres://', 'postgresql://', 1)
-        if '?' in db_url:
-            db_url = db_url.split('?')[0]
+        # NOTE: previously stripped everything after '?', which deleted
+        # sslmode=require - Neon needs that to accept the connection at
+        # all. Keep the query string intact.
         app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 
     config[config_name].init_app(app)
